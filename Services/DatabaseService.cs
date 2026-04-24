@@ -56,7 +56,7 @@ namespace Yorvis.Services
         public async Task<CategoryConfig> GetGlobalConfig()
         {
             var config = await _database.Table<CategoryConfig>().Where(x => x.Name == "_Settings").FirstOrDefaultAsync();
-            return config ?? new CategoryConfig { IntervalSeconds = 5, Language = "en", IsRtl = false, StartOfDayHour = 4, StartOfWeekDay = 1 };
+            return config ?? new CategoryConfig { IntervalSeconds = 1, Language = "en", IsRtl = false, StartOfDayHour = 4, StartOfWeekDay = 1 };
         }
 
         public async Task UpdateGlobalConfig(int interval, string lang, bool isRtl, int startOfDay, int startOfWeek)
@@ -108,8 +108,13 @@ namespace Yorvis.Services
         
         public async Task<List<ActivityLog>> GetStats(DateTime start, DateTime end)
         {
+            // Ensure we use UTC for comparison
+            var startUtc = start.ToUniversalTime();
+            var endUtc = end.ToUniversalTime();
+
             return await _database.Table<ActivityLog>()
-                .Where(x => x.Timestamp >= start && x.Timestamp <= end)
+                .Where(x => x.Timestamp >= startUtc && x.Timestamp <= endUtc)
+                .OrderBy(x => x.Timestamp)
                 .ToListAsync();
         }
     }

@@ -102,7 +102,18 @@ namespace Yorvis
 
                 if (action == "getStats")
                 {
-                    var logs = await db.GetRecentActivities(500);
+                    List<Yorvis.Models.ActivityLog> logs;
+                    if (doc.RootElement.TryGetProperty("start", out var startEl) && doc.RootElement.TryGetProperty("end", out var endEl))
+                    {
+                        DateTime start = DateTime.Parse(startEl.GetString()!).ToUniversalTime();
+                        DateTime end = DateTime.Parse(endEl.GetString()!).ToUniversalTime();
+                        logs = await db.GetStats(start, end);
+                    }
+                    else
+                    {
+                        logs = await db.GetRecentActivities(1000);
+                    }
+                    
                     var categories = await db.GetCategories();
                     
                     // Get current live status
@@ -152,6 +163,7 @@ namespace Yorvis
                         Name = catJson.GetProperty("Name").GetString(),
                         Keywords = catJson.GetProperty("Keywords").GetString(),
                         Color = catJson.GetProperty("Color").GetString(),
+                        DisplayOrder = catJson.TryGetProperty("DisplayOrder", out var order) ? order.GetInt32() : 0,
                         ParentId = catJson.TryGetProperty("ParentId", out var pid) && pid.ValueKind != JsonValueKind.Null ? pid.GetInt32() : null
                     };
                     await db.SaveCategory(config);

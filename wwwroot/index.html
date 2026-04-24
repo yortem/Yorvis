@@ -48,7 +48,7 @@
         }
         
         /* Draggable Title Bar */
-        .title-bar { 
+        .title-bar, .app-header { 
             -webkit-app-region: drag; 
             background: #1e293b; 
             color: white;
@@ -142,13 +142,141 @@
 
         [dir="rtl"] .mr-4 { margin-right: 0; margin-left: 1rem; }
         [dir="rtl"] .ml-4 { margin-left: 0; margin-right: 1rem; }
+
+        /* Timeline Styles */
+        .timeline-container.vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            height: auto;
+            overflow: visible;
+        }
+        .timeline-container.horizontal {
+            display: flex;
+            flex-direction: row;
+            height: 60px;
+            background: #f8fafc;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #f1f5f9;
+            direction: ltr; /* Internal layout for time mapping */
+        }
+        .timeline-container.horizontal .timeline-segment {
+            height: 100%;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .timeline-container.horizontal .timeline-segment:hover {
+            filter: brightness(1.1);
+            transform: scaleY(1.1);
+            z-index: 10;
+        }
+        .timeline-card {
+            display: flex;
+            gap: 16px;
+            position: relative;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .timeline-time {
+            width: 50px;
+            text-align: right;
+            font-size: 10px;
+            font-weight: 800;
+            color: #94a3b8;
+            padding-top: 12px;
+            flex-shrink: 0;
+        }
+        .timeline-dot-path {
+            width: 2px;
+            background: #f1f5f9;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .timeline-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: full;
+            border: 2px solid white;
+            position: absolute;
+            top: 14px;
+            z-index: 2;
+            box-shadow: 0 0 0 4px rgba(241, 245, 249, 0.5);
+        }
+        .timeline-content {
+            flex-grow: 1;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 16px;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+            transition: all 0.2s;
+        }
+        .timeline-content:hover {
+            border-color: #e2e8f0;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04);
+            transform: translateX(4px);
+        }
+        .timeline-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #1e293b;
+        }
+
+        /* Custom Context Menu */
+        #contextMenu {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            background: white;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 4px;
+            min-width: 160px;
+        }
+        .context-item {
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .context-item:hover { background: #f1f5f9; color: #3525cd; }
+
+        /* Quick Modal */
+        #quickModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body class="font-body-md text-on-surface bg-background antialiased">
     <div class="title-bar">
         <div class="flex items-center gap-2 no-drag">
-            <img src="favicon.ico" class="w-4 h-4">
-            <span data-i18n="app_title">Yorvis</span>
+            <span class="material-symbols-outlined text-[14px] opacity-50">ghost</span>
+            <span class="text-[10px] opacity-50 font-black uppercase tracking-widest" data-i18n="app_title">Yorvis</span>
         </div>
         <div class="window-controls">
             <button onclick="windowControl('minimize')" class="material-symbols-outlined text-[16px]">remove</button>
@@ -159,6 +287,7 @@
 
     <nav class="app-nav">
         <button onclick="showView('dashboard')" class="nav-link active" data-i18n="dashboard">Dashboard</button>
+        <button onclick="showView('timeline')" class="nav-link">Timeline</button>
         <button onclick="showView('categories')" class="nav-link">Categorize</button>
         <button onclick="showView('settings')" class="nav-link" data-i18n="settings">Settings</button>
     </nav>
@@ -166,6 +295,23 @@
     <main>
         <!-- Dashboard View -->
         <div id="dashboard" class="view active">
+            <!-- Filter Bar -->
+            <div class="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-6">
+                <div class="flex items-center gap-4">
+                    <div class="flex bg-slate-50 p-1 rounded-lg">
+                        <button id="filter-day" onclick="setFilter('day')" class="filter-btn px-4 py-1.5 rounded-md text-[11px] font-bold transition-all">Day</button>
+                        <button id="filter-week" onclick="setFilter('week')" class="filter-btn px-4 py-1.5 rounded-md text-[11px] font-bold transition-all">Week</button>
+                        <button id="filter-month" onclick="setFilter('month')" class="filter-btn px-4 py-1.5 rounded-md text-[11px] font-bold transition-all">Month</button>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 no-drag">
+                        <span class="material-symbols-outlined text-slate-400 text-[18px]">calendar_today</span>
+                        <input type="date" id="customStart" onchange="applyCustomDates()" class="bg-transparent border-none p-0 text-[10px] font-black text-slate-600 outline-none focus:ring-0">
+                        <span class="text-slate-300 font-bold">-</span>
+                        <input type="date" id="customEnd" onchange="applyCustomDates()" class="bg-transparent border-none p-0 text-[10px] font-black text-slate-600 outline-none focus:ring-0">
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-12 gap-6 w-full">
                 <div class="col-span-12 lg:col-span-3 flex flex-col gap-4">
                     <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
@@ -174,6 +320,13 @@
                             <span class="material-symbols-outlined text-primary text-xs">timer</span>
                         </div>
                         <span id="totalTime" class="text-xl font-black text-primary tracking-tight">00:00:00</span>
+                        <div class="mt-4 pt-4 border-t border-slate-50">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-black uppercase tracking-tighter text-slate-400">System Clock</span>
+                                <span class="material-symbols-outlined text-slate-400 text-xs">schedule</span>
+                            </div>
+                            <span id="digitalClock" class="text-xl font-black text-slate-800 tracking-tight">00:00:00</span>
+                        </div>
                     </div>
 
                     <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
@@ -216,12 +369,87 @@
             </div>
         </div>
 
+        <!-- Timeline View -->
+        <div id="timeline" class="view">
+            <div class="flex flex-wrap items-center gap-2 mb-8 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                <span class="text-[10px] font-black text-slate-400 uppercase mr-2 ml-2">Range:</span>
+                <button onclick="setTimelineRange(0.25)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">15m</button>
+                <button onclick="setTimelineRange(0.5)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">30m</button>
+                <button onclick="setTimelineRange(1)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-primary text-white shadow-sm">1h</button>
+                <button onclick="setTimelineRange(2)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">2h</button>
+                <button onclick="setTimelineRange(3)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">3h</button>
+                <button onclick="setTimelineRange(4)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">4h</button>
+                <button onclick="setTimelineRange(6)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">6h</button>
+                <button onclick="setTimelineRange(12)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">12h</button>
+                <button onclick="setTimelineRange(24)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">24h</button>
+                <button onclick="setTimelineRange(48)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">48h</button>
+                
+                <div class="flex bg-slate-100 p-1 rounded-lg no-drag ms-4">
+                    <button onclick="setTimelineMode('vertical')" id="mode-vertical" class="px-3 py-1 rounded-md text-[9px] font-black uppercase transition-all">Stream</button>
+                    <button onclick="setTimelineMode('horizontal')" id="mode-horizontal" class="px-3 py-1 rounded-md text-[9px] font-black uppercase transition-all">Map</button>
+                </div>
+
+                <button onclick="refreshData()" class="ms-auto flex items-center gap-1 text-[10px] font-black text-primary hover:underline no-drag">
+                    <span class="material-symbols-outlined text-[14px]">refresh</span>
+                    REFRESH
+                </button>
+            </div>
+
+            <div id="timelineDebug" class="text-[9px] font-mono text-slate-400 mb-2 bg-slate-50 p-1 rounded border border-slate-100 hidden"></div>
+            
+            <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm min-h-[300px] flex flex-col justify-center">
+                <div class="flex justify-between items-end mb-4">
+                    <div>
+                        <h2 class="text-lg font-black text-slate-700 tracking-tight">Daily Flow</h2>
+                        <p id="timelineRangeInfo" class="text-xs text-slate-400 font-bold uppercase"></p>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-primary"></div>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase">Productive</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-slate-200"></div>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase">Idle</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="timelineContainer" class="timeline-container mb-8">
+                    <!-- Timeline segments injected here -->
+                </div>
+
+                <div id="timelineStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <!-- Category stats will be injected here -->
+                </div>
+
+                <div id="timelineLegend" class="flex flex-wrap gap-x-6 gap-y-2 mt-8 pt-6 border-t border-slate-50">
+                    <!-- Legend items -->
+                </div>
+            </div>
+        </div>
+
         <!-- Categorize View -->
         <div id="categories" class="view">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-sm font-black text-slate-700 uppercase tracking-tight">Hierarchy</h2>
                 <button onclick="addNewCategory()" class="bg-primary text-white px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest no-drag">+ Root</button>
             </div>
+            
+            <div class="bg-primary/5 border-l-4 border-primary p-4 rounded-r-xl mb-8 shadow-sm">
+                <div class="flex gap-4 items-start">
+                    <div class="bg-primary text-white p-2 rounded-lg flex items-center justify-center shrink-0 shadow-md shadow-primary/20">
+                        <span class="material-symbols-outlined text-[20px]">lightbulb</span>
+                    </div>
+                    <div>
+                        <h3 class="text-[10px] font-black text-primary uppercase tracking-widest mb-1" data-i18n="categorize_guide_title">Quick Guide</h3>
+                        <p class="text-[13px] text-slate-600 font-medium leading-relaxed" data-i18n="categorize_desc">
+                            Manage categorization rules here. Drag categories to set priority - the topmost matching category will be applied first. Use pipe-separated words (|) or Regex patterns.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
             <div id="categoryEditorList" class="flex flex-col"></div>
         </div>
 
@@ -267,6 +495,40 @@
         </div>
     </main>
 
+    <div id="contextMenu">
+        <div class="context-item" onclick="openQuickCategorize()">
+            <span class="material-symbols-outlined text-[16px]">category</span>
+            <span>Categorize This...</span>
+        </div>
+    </div>
+
+    <div id="quickModal">
+        <div class="bg-white w-[400px] rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
+            <div class="bg-slate-50 p-4 border-bottom border-slate-100 flex justify-between items-center">
+                <h3 class="text-xs font-black uppercase text-slate-500 tracking-widest">Quick Categorize</h3>
+                <button onclick="closeQuickModal()" class="material-symbols-outlined text-slate-400 hover:text-slate-600">close</button>
+            </div>
+            <div class="p-6 flex flex-col gap-4">
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block">Reference</label>
+                    <div id="quickRefText" class="text-[11px] font-mono bg-slate-50 p-2 rounded border border-slate-100 text-slate-600 break-all"></div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block">Keyword to Add</label>
+                    <input type="text" id="quickKeyword" class="w-full p-2 text-xs border rounded bg-slate-50 outline-none focus:border-primary">
+                    <p class="text-[9px] text-slate-400 mt-1 italic">Trimming the title to the core word is recommended.</p>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block">Target Category</label>
+                    <select id="quickCatSelect" class="w-full p-2 text-xs border rounded bg-slate-50 outline-none focus:border-primary"></select>
+                </div>
+                <div class="mt-2">
+                    <button onclick="submitQuickCategorize()" class="w-full bg-primary text-white py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all">Add to Category</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentLang = 'en';
         let translations = {};
@@ -276,8 +538,15 @@
         let refreshInterval = null;
         let forceNextRender = false;
         let sortable = null;
+        let currentFilter = 'day';
+        let timelineMode = 'vertical';
+        let startOfDayHour = 4;
+        let filterStart = null;
+        let filterEnd = null;
+        let contextData = { process: '', title: '' };
 
         async function loadLanguage(lang) {
+            // ... (keep existing)
             try {
                 const response = await fetch(`./lang/${lang}.json`);
                 translations = await response.json();
@@ -285,6 +554,149 @@
                 applyTranslations();
             } catch (e) { console.error("Failed to load language", e); }
         }
+
+        function showContextMenu(e, process, title) {
+            e.preventDefault();
+            contextData = { process, title };
+            const menu = document.getElementById('contextMenu');
+            menu.style.display = 'block';
+            
+            // Avoid overflow
+            let x = e.clientX;
+            let y = e.clientY;
+            if (x + 160 > window.innerWidth) x -= 160;
+            if (y + 100 > window.innerHeight) y -= 100;
+            
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+        }
+
+        function hideContextMenu() {
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        function openQuickCategorize() {
+            hideContextMenu();
+            const modal = document.getElementById('quickModal');
+            const refText = document.getElementById('quickRefText');
+            const keywordInput = document.getElementById('quickKeyword');
+            const catSelect = document.getElementById('quickCatSelect');
+
+            refText.innerText = contextData.title || contextData.process;
+            
+            // Simple default keyword extraction (first 2 words or whole process)
+            const words = (contextData.title || contextData.process).split(' ');
+            keywordInput.value = words.length > 1 ? words.slice(0, 2).join(' ') : words[0];
+
+            catSelect.innerHTML = '';
+            localCategories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.Id;
+                opt.innerText = cat.Name;
+                opt.style.backgroundColor = cat.Color;
+                opt.style.color = getContrastYIQ(cat.Color);
+                catSelect.appendChild(opt);
+            });
+
+            modal.style.display = 'flex';
+            
+            // Set initial color for the first item
+            if (localCategories.length > 0) {
+                const firstCat = localCategories[0];
+                catSelect.style.backgroundColor = firstCat.Color;
+                catSelect.style.color = getContrastYIQ(firstCat.Color);
+            }
+
+            catSelect.onchange = () => {
+                const cat = localCategories.find(c => c.Id == catSelect.value);
+                if (cat) {
+                    catSelect.style.backgroundColor = cat.Color;
+                    catSelect.style.color = getContrastYIQ(cat.Color);
+                }
+            };
+        }
+
+        function getContrastYIQ(hexcolor){
+            if (!hexcolor || hexcolor.length < 6) return 'black';
+            hexcolor = hexcolor.replace("#", "");
+            const r = parseInt(hexcolor.substr(0,2),16);
+            const g = parseInt(hexcolor.substr(2,2),16);
+            const b = parseInt(hexcolor.substr(4,2),16);
+            const yiq = ((r*299)+(g*587)+(b*114))/1000;
+            return (yiq >= 128) ? '#0b1c30' : 'white';
+        }
+
+        function getCatForLog(process, title, categories) {
+            if (!categories) return "Uncategorized";
+            for (const cat of categories) {
+                if (!cat.Keywords) continue;
+                try {
+                    const regex = new RegExp(cat.Keywords, 'i');
+                    if (regex.test(title || "")) return cat.Name;
+                } catch (e) {
+                    const keywords = (cat.Keywords || "").split('|');
+                    for (const k of keywords) {
+                        if ((title || "").toLowerCase().includes(k.trim().toLowerCase())) return cat.Name;
+                    }
+                }
+            }
+            for (const cat of categories) {
+                if (!cat.Keywords) continue;
+                try {
+                    const regex = new RegExp(cat.Keywords, 'i');
+                    if (regex.test(process)) return cat.Name;
+                } catch (e) {
+                    const keywords = (cat.Keywords || "").split('|');
+                    for (const k of keywords) {
+                        if (process.toLowerCase().includes(k.trim().toLowerCase())) return cat.Name;
+                    }
+                }
+            }
+            const isExplorer = (process || "").toLowerCase().includes("explorer");
+            const isEmptyTitle = !(title || "").trim();
+            if (isExplorer || isEmptyTitle) return "Desktop";
+            return "Uncategorized";
+        }
+
+        function parseDate(d) {
+            if (!d) return 0;
+            try {
+                if (typeof d === 'string') {
+                    let s = d.replace(' ', 'T');
+                    // Force UTC if no timezone info is present
+                    if (!s.includes('Z') && !s.includes('+')) s += 'Z';
+                    const t = new Date(s).getTime();
+                    return isNaN(t) ? 0 : t;
+                }
+                const t = new Date(d).getTime();
+                return isNaN(t) ? 0 : t;
+            } catch(e) { return 0; }
+        }
+
+        function closeQuickModal() {
+            document.getElementById('quickModal').style.display = 'none';
+        }
+
+        function submitQuickCategorize() {
+            const catId = document.getElementById('quickCatSelect').value;
+            const word = document.getElementById('quickKeyword').value.trim();
+            if (!word) return;
+
+            const cat = localCategories.find(c => c.Id == catId);
+            if (cat) {
+                const existing = cat.Keywords || "";
+                cat.Keywords = existing ? `${existing}|${word}` : word;
+                saveCategory(cat);
+                closeQuickModal();
+                forceNextRender = true;
+                setTimeout(refreshData, 500);
+            }
+        }
+
+        document.addEventListener('click', hideContextMenu);
+
+        // Update list items to have oncontextmenu
+        // (Will update the updateUI and renderList functions below)
 
         function applyTranslations() {
             document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -313,6 +725,10 @@
             if (viewId === 'dashboard') {
                 if(!refreshInterval) refreshInterval = setInterval(refreshData, 5000);
                 refreshData();
+            } else if (viewId === 'timeline') {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+                setTimelineRange(1); // Default to 1h when entering timeline
             } else {
                 clearInterval(refreshInterval);
                 refreshInterval = null;
@@ -321,7 +737,285 @@
         }
 
         function windowControl(command) { window.external.sendMessage(JSON.stringify({ action: 'windowControl', command })); }
-        function refreshData() { window.external.sendMessage(JSON.stringify({ action: 'getStats' })); }
+        
+        function refreshData() { 
+            if (!filterStart || !filterEnd) return;
+            const msg = { action: 'getStats' };
+            msg.start = filterStart.toISOString();
+            msg.end = filterEnd.toISOString();
+            window.external.sendMessage(JSON.stringify(msg)); 
+        }
+
+        function setFilter(period) {
+            currentFilter = period;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-primary', 'shadow-sm');
+                btn.classList.add('text-slate-500');
+            });
+            const activeBtn = document.getElementById(`filter-${period}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-500');
+                activeBtn.classList.add('bg-white', 'text-primary', 'shadow-sm');
+            }
+
+            const now = new Date();
+            filterEnd = new Date(now);
+            
+            if (period === 'day') {
+                filterStart = new Date(now);
+                filterStart.setHours(startOfDayHour, 0, 0, 0);
+                if (now.getHours() < startOfDayHour) {
+                    filterStart.setDate(filterStart.getDate() - 1);
+                }
+            } else if (period === 'week') {
+                filterStart = new Date(now);
+                filterStart.setDate(now.getDate() - 7);
+            } else if (period === 'month') {
+                filterStart = new Date(now);
+                filterStart.setDate(now.getDate() - 30);
+            }
+
+            updateDateRangeDisplay();
+            refreshData();
+        }
+
+        function updateDateRangeDisplay() {
+            if (!filterStart || !filterEnd) return;
+            
+            // Update the custom inputs
+            document.getElementById('customStart').value = filterStart.toISOString().split('T')[0];
+            document.getElementById('customEnd').value = filterEnd.toISOString().split('T')[0];
+        }
+
+        function applyCustomDates() {
+            const startVal = document.getElementById('customStart').value;
+            const endVal = document.getElementById('customEnd').value;
+            if (startVal && endVal) {
+                filterStart = new Date(startVal);
+                filterEnd = new Date(endVal);
+                // Set to end of day for the end date
+                filterEnd.setHours(23, 59, 59, 999);
+                
+                // Remove button highlights
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('bg-white', 'text-primary', 'shadow-sm');
+                    btn.classList.add('text-slate-500');
+                });
+                
+                refreshData();
+            }
+        }
+
+        function exportReport() {
+            alert('Exporting report as CSV...');
+            // Logic for export can be added here
+        }
+
+        function setTimelineRange(hours) {
+            const now = new Date();
+            filterEnd = new Date(now);
+            filterStart = new Date(now.getTime() - Math.floor(hours * 60 * 60 * 1000));
+            
+            // UI Update
+            document.querySelectorAll('.time-range-btn').forEach(btn => {
+                btn.classList.remove('bg-primary', 'text-white', 'shadow-sm');
+                btn.classList.add('bg-slate-50', 'text-slate-500');
+            });
+            
+            // Highlight the correct button
+            const btns = Array.from(document.querySelectorAll('.time-range-btn'));
+            const targetBtn = btns.find(b => b.innerText.includes(hours >= 1 ? hours + 'h' : (hours*60) + 'm'));
+            if (targetBtn) {
+                targetBtn.classList.remove('bg-slate-50', 'text-slate-500');
+                targetBtn.classList.add('bg-primary', 'text-white', 'shadow-sm');
+            }
+
+            const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('timelineRangeInfo').innerText = `${filterStart.toLocaleString([], options)} - ${filterEnd.toLocaleString([], options)}`;
+            
+            refreshData();
+        }
+
+        function setTimelineMode(mode) {
+            timelineMode = mode;
+            document.querySelectorAll('[id^="mode-"]').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-primary', 'shadow-sm');
+                btn.classList.add('text-slate-400');
+            });
+            const activeBtn = document.getElementById(`mode-${mode}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-400');
+                activeBtn.classList.add('bg-white', 'text-primary', 'shadow-sm');
+            }
+            refreshData();
+        }
+
+        function renderTimeline(logs, categories) {
+            const container = document.getElementById('timelineContainer');
+            const legend = document.getElementById('timelineLegend');
+            const statsContainer = document.getElementById('timelineStats');
+            const debug = document.getElementById('timelineDebug');
+            if (!container || !legend || !statsContainer) return;
+            
+            if (debug) {
+                debug.classList.remove('hidden');
+                debug.innerText = `Processing ${logs ? logs.length : 0} logs... View: ${timelineMode}`;
+            }
+            
+            container.innerHTML = '';
+            legend.innerHTML = '';
+            statsContainer.innerHTML = '';
+            container.className = `timeline-container ${timelineMode}`;
+
+            if (!logs || logs.length === 0) {
+                container.innerHTML = `
+                    <div class="w-full h-full flex flex-col items-center justify-center gap-2 py-8">
+                        <div class="text-[10px] font-black text-slate-300 uppercase tracking-widest">No Activity Tracked in this range</div>
+                    </div>`;
+                statsContainer.innerHTML = '<div class="col-span-full text-center text-[10px] text-slate-400 font-bold uppercase">No data found in current range</div>';
+                return;
+            }
+
+            const catMap = {};
+            const catStats = {};
+            categories.forEach(c => {
+                catMap[c.Name] = c.Color;
+                catStats[c.Name] = 0;
+            });
+
+            const rangeStartMs = filterStart.getTime();
+            const rangeEndMs = filterEnd.getTime();
+            const totalRangeMs = rangeEndMs - rangeStartMs;
+
+            if (timelineMode === 'vertical') {
+                const sortedLogs = [...logs].sort((a, b) => parseDate(b.Timestamp) - parseDate(a.Timestamp));
+                sortedLogs.forEach(log => {
+                    const color = catMap[log.Category] || '#94a3b8';
+                    const timeStr = new Date(parseDate(log.Timestamp)).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                    catStats[log.Category] = (catStats[log.Category] || 0) + log.DurationSeconds;
+                    
+                    const card = document.createElement('div');
+                    card.className = 'timeline-card';
+                    card.innerHTML = `
+                        <div class="timeline-time">${timeStr}</div>
+                        <div class="timeline-dot-path"><div class="timeline-dot" style="background-color: ${color}"></div></div>
+                        <div class="timeline-content">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-[9px] font-black uppercase tracking-widest" style="color: ${color}">${log.Category}</span>
+                                <span class="text-[9px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">${formatDuration(log.DurationSeconds)}</span>
+                            </div>
+                            <div class="text-xs font-extrabold text-slate-700">${log.ProcessName}</div>
+                            <div class="text-[10px] text-slate-400 truncate max-w-[500px]">${log.WindowTitle || ''}</div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                // Horizontal Map Mode
+                const sortedLogs = [...logs].sort((a, b) => parseDate(a.Timestamp) - parseDate(b.Timestamp));
+                let lastEndMs = rangeStartMs;
+
+                sortedLogs.forEach(log => {
+                    let logStartMs = parseDate(log.Timestamp);
+                    let logEndMs = logStartMs + (log.DurationSeconds * 1000);
+
+                    if (logEndMs <= rangeStartMs || logStartMs >= rangeEndMs) return;
+                    
+                    const actualStart = Math.max(logStartMs, rangeStartMs);
+                    const actualEnd = Math.min(logEndMs, rangeEndMs);
+                    catStats[log.Category] = (catStats[log.Category] || 0) + (actualEnd - actualStart) / 1000;
+
+                    if (actualStart > lastEndMs) {
+                        const gapWidth = ((actualStart - lastEndMs) / totalRangeMs) * 100;
+                        if (gapWidth > 0.1) {
+                            const gap = document.createElement('div');
+                            gap.className = 'timeline-segment opacity-20';
+                            gap.style.width = `${gapWidth}%`;
+                            gap.style.backgroundColor = '#f1f5f9';
+                            container.appendChild(gap);
+                        }
+                    }
+
+                    let logWidth = ((actualEnd - actualStart) / totalRangeMs) * 100;
+                    if (logWidth > 0) {
+                        logWidth = Math.max(logWidth, 0.2);
+                        const color = catMap[log.Category] || '#94a3b8';
+                        const seg = document.createElement('div');
+                        seg.className = 'timeline-segment';
+                        seg.style.width = `${logWidth}%`;
+                        seg.style.backgroundColor = color;
+                        
+                        const timeStr = new Date(actualStart).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                        seg.innerHTML = `
+                            <div class="timeline-tooltip">
+                                <div class="font-black mb-1" style="color: ${color}">${log.Category}</div>
+                                <div class="font-bold text-white">${log.ProcessName}</div>
+                                <div class="text-slate-400 truncate max-w-[200px]">${log.WindowTitle || ''}</div>
+                                <div class="mt-1 pt-1 border-t border-slate-700 text-white">${timeStr} • ${formatDuration(log.DurationSeconds)}</div>
+                            </div>
+                        `;
+                        container.appendChild(seg);
+                    }
+                    lastEndMs = actualEnd;
+                });
+                
+                // Final gap
+                if (rangeEndMs > lastEndMs) {
+                    const finalGapWidth = ((rangeEndMs - lastEndMs) / totalRangeMs) * 100;
+                    const finalGap = document.createElement('div');
+                    finalGap.className = 'timeline-segment opacity-20';
+                    finalGap.style.width = `${finalGapWidth}%`;
+                    finalGap.style.backgroundColor = '#f1f5f9';
+                    container.appendChild(finalGap);
+                }
+                
+                // Newest is on right by default in LTR container with oldest first sorted logs.
+                // If user specifically wants RTL logic, we can set direction: rtl on container.
+                // The user said "ימין הוא החדש" (Right is Newest). 
+                // In LTR, x-axis goes from 0 (Left) to 100 (Right). 
+                // So if we sort logs by time ASC, the Newest will be at 100 (Right). Correct.
+            }
+
+            // Final Gap
+            if (rangeEndMs > lastEndMs) {
+                const finalIdleWidth = ((rangeEndMs - lastEndMs) / totalRangeMs) * 100;
+                if (finalIdleWidth > 0.1) {
+                    const finalIdle = document.createElement('div');
+                    finalIdle.className = 'timeline-segment';
+                    finalIdle.style.width = `${finalIdleWidth}%`;
+                    finalIdle.style.backgroundColor = '#f1f5f9';
+                    container.appendChild(finalIdle);
+                }
+            }
+
+            // Render Stats & Legend
+            Object.entries(catStats).sort((a,b) => b[1] - a[1]).forEach(([name, sec]) => {
+                if (sec <= 0) return;
+                const color = catMap[name] || '#94a3b8';
+                
+                // Stats Card
+                statsContainer.innerHTML += `
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <div class="flex items-center gap-2 mb-1">
+                            <div class="w-2 h-2 rounded-full" style="background-color: ${color}"></div>
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">${name}</span>
+                        </div>
+                        <div class="text-xs font-black text-slate-700">${formatDuration(sec)}</div>
+                    </div>
+                `;
+
+                // Legend
+                legend.innerHTML += `
+                    <div class="flex items-center gap-2">
+                        <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${color}"></div>
+                        <span class="text-[10px] font-black uppercase text-slate-500 tracking-tighter">${name}</span>
+                    </div>
+                `;
+            });
+
+            // Debug Indicator
+            legend.innerHTML += `<div class="ml-auto text-[9px] font-bold text-slate-300 uppercase italic">Found ${logs.length} records in this range</div>`;
+        }
 
         function saveSettings() {
             const language = document.getElementById('langInput').value;
@@ -352,26 +1046,37 @@
         }
 
         window.external.receiveMessage(message => {
-            const data = JSON.parse(message);
-            if (data.action === 'statsData') {
-                localCategories = data.categories.filter(c => c.Name !== '_Settings');
-                updateUI(data.logs, localCategories, data.current);
-                
-                const focused = document.activeElement;
-                const isTyping = focused && (focused.tagName === 'INPUT' || focused.tagName === 'TEXTAREA') && document.getElementById('categories').contains(focused);
-                
-                if (!isTyping || forceNextRender || document.getElementById('categoryEditorList').innerHTML === '') {
-                    renderCategoryTree(localCategories);
-                    forceNextRender = false;
+            try {
+                const data = JSON.parse(message);
+                if (data.action === 'statsData') {
+                    localCategories = data.categories.filter(c => c.Name !== '_Settings');
+                    
+                    if (activeViewId === 'timeline') {
+                        renderTimeline(data.logs, localCategories);
+                    } else {
+                        updateUI(data.logs, localCategories, data.current);
+                    }
+                    
+                    const focused = document.activeElement;
+                    const isTyping = focused && (focused.tagName === 'INPUT' || focused.tagName === 'TEXTAREA') && document.getElementById('categories').contains(focused);
+                    
+                    if (!isTyping || forceNextRender || document.getElementById('categoryEditorList').innerHTML === '') {
+                        renderCategoryTree(localCategories);
+                        forceNextRender = false;
+                    }
                 }
-            }
-            if (data.action === 'settingsData') {
-                document.getElementById('langInput').value = data.language || 'en';
-                document.getElementById('dirInput').value = data.isRtl ? 'rtl' : 'ltr';
-                document.getElementById('startOfDayInput').value = data.startOfDay;
-                document.getElementById('startOfWeekInput').value = data.startOfWeek;
-                loadLanguage(data.language || 'en');
-                setDirection(data.isRtl ? 'rtl' : 'ltr');
+                if (data.action === 'settingsData') {
+                    document.getElementById('langInput').value = data.language || 'en';
+                    document.getElementById('dirInput').value = data.isRtl ? 'rtl' : 'ltr';
+                    document.getElementById('startOfDayInput').value = data.startOfDay;
+                    document.getElementById('startOfWeekInput').value = data.startOfWeek;
+                    startOfDayHour = data.startOfDay;
+                    setFilter(currentFilter);
+                    loadLanguage(data.language || 'en');
+                    setDirection(data.isRtl ? 'rtl' : 'ltr');
+                }
+            } catch (e) {
+                console.error("Message Processing Error:", e);
             }
         });
 
@@ -380,21 +1085,23 @@
             if (!container) return;
             container.innerHTML = '';
             
-            // Simplified: Re-using sortable on root container
-            const roots = categories.filter(c => !c.ParentId);
+            const roots = categories.filter(c => !c.ParentId).sort((a, b) => (a.DisplayOrder || 0) - (b.DisplayOrder || 0));
             roots.forEach(root => container.appendChild(createCategoryElement(root, categories, 0)));
             
-            if(sortable) sortable.destroy();
-            sortable = new Sortable(container, {
+            initSortable(container);
+        }
+
+        function initSortable(el) {
+            new Sortable(el, {
                 animation: 150,
+                handle: '.cursor-move',
                 onEnd: () => {
-                    const items = Array.from(container.querySelectorAll('.category-row-wrapper'));
+                    const items = Array.from(el.children).filter(c => c.classList.contains('category-row-wrapper'));
                     items.forEach((item, index) => {
                         const id = item.dataset.id;
                         const cat = localCategories.find(c => c.Id == id);
                         if (cat) {
                             cat.DisplayOrder = index;
-                            // Update local list then save
                             saveCategory(cat);
                         }
                     });
@@ -422,10 +1129,16 @@
             `;
             
             // Add children recursively
-            const children = allCategories.filter(c => c.ParentId === cat.Id);
+            const children = allCategories.filter(c => c.ParentId === cat.Id).sort((a, b) => (a.DisplayOrder || 0) - (b.DisplayOrder || 0));
             const childrenContainer = document.createElement('div');
+            childrenContainer.className = 'ml-4 border-l border-slate-100'; // Added some visual nesting
             children.forEach(child => childrenContainer.appendChild(createCategoryElement(child, allCategories, level + 1)));
             wrapper.appendChild(childrenContainer);
+            
+            if (children.length > 0) {
+                initSortable(childrenContainer);
+            }
+            
             return wrapper;
         }
 
@@ -436,58 +1149,45 @@
 
         // ... (remaining functions: updateUI, updatePieChart, renderList, formatDuration)
         function updateUI(logs, categories, current) {
-            const getCatForLog = (process, title) => {
-                for (const cat of categories) {
-                    if (!cat.Keywords) continue;
-                    try {
-                        const regex = new RegExp(cat.Keywords, 'i');
-                        if (regex.test(title || "")) return cat.Name;
-                    } catch (e) {
-                        const keywords = (cat.Keywords || "").split('|');
-                        for (const k of keywords) {
-                            if ((title || "").toLowerCase().includes(k.trim().toLowerCase())) return cat.Name;
-                        }
-                    }
-                }
-                for (const cat of categories) {
-                    if (!cat.Keywords) continue;
-                    try {
-                        const regex = new RegExp(cat.Keywords, 'i');
-                        if (regex.test(process)) return cat.Name;
-                    } catch (e) {
-                        const keywords = (cat.Keywords || "").split('|');
-                        for (const k of keywords) {
-                            if (process.toLowerCase().includes(k.trim().toLowerCase())) return cat.Name;
-                        }
-                    }
-                }
-                return "Uncategorized";
-            };
+            try {
+                if (!logs || !categories) return;
+                
+                // Retroactive categorization
+                logs.forEach(log => { 
+                    log.Category = getCatForLog(log.ProcessName, log.WindowTitle, categories); 
+                });
 
-            const catMap = {};
-            categories.forEach(c => catMap[c.Name] = c.Color);
-            logs.forEach(log => { log.Category = getCatForLog(log.ProcessName, log.WindowTitle); });
+                const catMap = {};
+                categories.forEach(c => catMap[c.Name] = c.Color);
 
             let totalSeconds = logs.reduce((acc, log) => acc + log.DurationSeconds, 0);
             if (totalSeconds === 0) totalSeconds = 1;
             document.getElementById('totalTime').innerText = formatDuration(totalSeconds);
 
+            // Calculate Summaries
             const catSummary = {};
-            logs.forEach(log => catSummary[log.Category] = (catSummary[catSummary[log.Category] || 0] ? (catSummary[log.Category] || 0) : 0) + log.DurationSeconds);
-            renderList('categoryList', catSummary, totalSeconds, name => catMap[name] || '#94a3b8');
+            const appSummary = {};
+            const appToCat = {};
+            const titleSummary = {};
+            const titleToCat = {};
 
-            const appSummary = {}, appToCat = {};
             logs.forEach(log => {
+                // Category Summary
+                catSummary[log.Category] = (catSummary[log.Category] || 0) + log.DurationSeconds;
+                
+                // App Summary
                 appSummary[log.ProcessName] = (appSummary[log.ProcessName] || 0) + log.DurationSeconds;
                 appToCat[log.ProcessName] = log.Category;
-            });
-            renderList('appList', appSummary, totalSeconds, name => catMap[appToCat[name]] || '#3525cd');
 
-            const titleSummary = {}, titleToCat = {};
-            logs.forEach(log => {
-                titleSummary[log.WindowTitle] = (titleSummary[log.WindowTitle] || 0) + log.DurationSeconds;
-                titleToCat[log.WindowTitle] = log.Category;
+                // Title Summary
+                if (log.WindowTitle) {
+                    titleSummary[log.WindowTitle] = (titleSummary[log.WindowTitle] || 0) + log.DurationSeconds;
+                    titleToCat[log.WindowTitle] = log.Category;
+                }
             });
+
+            renderList('categoryList', catSummary, totalSeconds, name => catMap[name] || '#94a3b8');
+            renderList('appList', appSummary, totalSeconds, name => catMap[appToCat[name]] || '#3525cd');
             renderList('titleList', titleSummary, totalSeconds, name => catMap[titleToCat[name]] || '#712ae2');
 
             updatePieChart(catSummary, catMap);
@@ -495,32 +1195,54 @@
             const logContainer = document.getElementById('activityLog');
             if(logContainer) {
                 logContainer.innerHTML = '';
-                logs.slice(0, 15).forEach(log => {
+                // Sort newest first for Recent Logs
+                const sortedRecent = [...logs].sort((a, b) => parseDate(b.Timestamp) - parseDate(a.Timestamp));
+                const visibleLogs = sortedRecent.slice(0, 15);
+                const maxDuration = Math.max(...visibleLogs.map(l => l.DurationSeconds), 1);
+                
+                visibleLogs.forEach(log => {
                     const color = catMap[log.Category] || '#94a3b8';
-                    const timeStr = new Date(log.Timestamp).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                    const logTime = parseDate(log.Timestamp);
+                    const timeStr = new Date(logTime).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                    const barWidth = (log.DurationSeconds / maxDuration) * 100;
+                    const safeTitle = (log.WindowTitle || "").replace(/'/g, "\\'");
+                    const safeProcess = (log.ProcessName || "").replace(/'/g, "\\'");
+
                     logContainer.innerHTML += `
-                        <div class="py-1.5 flex items-center gap-3">
-                            <div class="w-1 h-5 rounded-full shrink-0" style="background-color: ${color}"></div>
-                            <div class="flex-grow min-w-0">
-                                <div class="flex justify-between items-center">
-                                    <div class="flex items-center gap-2 truncate">
-                                        <span class="text-[11px] font-bold text-slate-700">${log.ProcessName}</span>
-                                        <span class="text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-tighter text-white" style="background-color: ${color}">${log.Category}</span>
+                        <div class="py-2.5 flex flex-col gap-1 relative group overflow-hidden cursor-context-menu" 
+                             oncontextmenu="showContextMenu(event, '${safeProcess}', '${safeTitle}')">
+                            <div class="flex items-center gap-3">
+                                <div class="w-1 h-6 rounded-full shrink-0" style="background-color: ${color}"></div>
+                                <div class="flex-grow min-w-0">
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center gap-2 truncate">
+                                            <span class="text-[11px] font-extrabold text-slate-700">${log.ProcessName}</span>
+                                            <span class="text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-tighter text-white shadow-sm" style="background-color: ${color}">${log.Category}</span>
+                                        </div>
+                                        <span class="text-[9px] font-bold text-slate-400 shrink-0">${timeStr} • ${formatDuration(log.DurationSeconds)}</span>
                                     </div>
-                                    <span class="text-[9px] font-bold text-slate-400 shrink-0">${timeStr} • ${formatDuration(log.DurationSeconds)}</span>
+                                    <span class="text-[9px] text-slate-400 truncate block leading-tight">${log.WindowTitle}</span>
                                 </div>
-                                <span class="text-[9px] text-slate-400 truncate block">${log.WindowTitle}</span>
+                            </div>
+                            <!-- Proportional Duration Bar -->
+                            <div class="absolute bottom-0 left-0 w-full h-[2px] bg-slate-50">
+                                <div class="h-full rounded-full transition-all duration-700 ease-out" 
+                                     style="width: ${barWidth}%; background-color: ${color}; opacity: 0.3">
+                                </div>
                             </div>
                         </div>`;
                 });
             }
             
-            if (current) {
-                document.getElementById('currentProcess').innerText = current.process;
-                document.getElementById('currentTitle').innerText = current.title;
-            } else if (logs.length > 0) {
-                document.getElementById('currentProcess').innerText = logs[0].ProcessName;
-                document.getElementById('currentTitle').innerText = logs[0].WindowTitle;
+                if (current) {
+                    document.getElementById('currentProcess').innerText = current.process;
+                    document.getElementById('currentTitle').innerText = current.title;
+                } else if (logs.length > 0) {
+                    document.getElementById('currentProcess').innerText = logs[0].ProcessName;
+                    document.getElementById('currentTitle').innerText = logs[0].WindowTitle;
+                }
+            } catch (e) {
+                console.error("UI Update Error:", e);
             }
         }
 
@@ -529,6 +1251,7 @@
             const labels = Object.keys(summary);
             const data = Object.values(summary);
             const colors = labels.map(l => catMap[l] || '#94a3b8');
+            
             if (pieChart) {
                 pieChart.data.labels = labels;
                 pieChart.data.datasets[0].data = data;
@@ -537,8 +1260,31 @@
             } else {
                 pieChart = new Chart(ctx, {
                     type: 'pie',
-                    data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 0 }] },
-                    options: { responsive: true, animation: false, plugins: { legend: { display: false } } }
+                    data: { 
+                        labels: labels, 
+                        datasets: [{ 
+                            data: data, 
+                            backgroundColor: colors, 
+                            borderWidth: 3,
+                            borderColor: '#ffffff',
+                            hoverOffset: 8
+                        }] 
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: true,
+                        animation: { duration: 750, easing: 'easeInOutQuart' }, 
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                                titleFont: { size: 10, weight: 'bold' },
+                                bodyFont: { size: 10 },
+                                padding: 8,
+                                displayColors: true
+                            }
+                        } 
+                    }
                 });
             }
         }
@@ -549,8 +1295,9 @@
             container.innerHTML = '';
             Object.entries(summary).sort((a,b) => b[1] - a[1]).slice(0, 5).forEach(([name, sec]) => {
                 const percent = (sec / totalSeconds * 100).toFixed(0);
+                const safeName = (name || "Unknown").replace(/'/g, "\\'");
                 container.innerHTML += `
-                    <div class="space-y-1">
+                    <div class="space-y-1 cursor-context-menu" oncontextmenu="showContextMenu(event, '${safeName}', '${safeName}')">
                         <div class="flex justify-between items-center text-[10px]">
                             <span class="font-bold truncate max-w-[60%] text-slate-500">${name || 'Unknown'}</span>
                             <span class="text-slate-300 font-bold">${formatDuration(sec)}</span>
@@ -567,7 +1314,16 @@
             return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
         }
 
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('digitalClock').innerText = now.toLocaleTimeString('he-IL', { hour12: false });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        setFilter('day');
         showView('dashboard');
+        setTimelineMode('vertical');
         document.addEventListener('contextmenu', e => e.preventDefault());
     </script>
 </body>

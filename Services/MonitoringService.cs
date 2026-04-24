@@ -35,23 +35,27 @@ namespace Yorvis.Services
 
         private async Task MonitorLoop(CancellationToken token)
         {
-            _lastStartTime = DateTime.Now;
+            _lastStartTime = DateTime.UtcNow;
             
             while (!token.IsCancellationRequested)
             {
                 try
                 {
-                    int intervalSeconds = await _db.GetInterval();
+                    int intervalSeconds = 1; // Force 1 second for high precision as requested
                     string currentProcess = Win32Interop.GetActiveProcessName();
                     string currentTitle = Win32Interop.GetActiveWindowTitle();
 
-                    if (currentProcess != _lastProcessName || currentTitle != _lastWindowTitle)
+                    bool windowChanged = currentProcess != _lastProcessName || currentTitle != _lastWindowTitle;
+                    var durationSinceStart = (DateTime.UtcNow - _lastStartTime).TotalSeconds;
+
+                    // Save if window changed OR if activity has been ongoing for > 60 seconds (Heartbeat)
+                    if (windowChanged || durationSinceStart >= 60)
                     {
                         await SavePreviousActivity();
 
                         _lastProcessName = currentProcess;
                         _lastWindowTitle = currentTitle;
-                        _lastStartTime = DateTime.Now;
+                        _lastStartTime = DateTime.UtcNow;
                     }
                     
                     await Task.Delay(intervalSeconds * 1000, token);
@@ -71,7 +75,7 @@ namespace Yorvis.Services
         {
             if (string.IsNullOrEmpty(_lastProcessName)) return;
 
-            var duration = (DateTime.Now - _lastStartTime).TotalSeconds;
+            var duration = (DateTime.UtcNow - _lastStartTime).TotalSeconds;
             if (duration < 1) return; // Ignore very short durations
 
             var category = _categoryService.GetCategory(_lastProcessName, _lastWindowTitle);

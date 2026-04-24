@@ -56,6 +56,12 @@ namespace Yorvis.Services
                 catch { }
             }
 
+            // Default fallback logic
+            bool isExplorer = (processName ?? "").Contains("explorer", StringComparison.OrdinalIgnoreCase);
+            bool isEmptyTitle = string.IsNullOrWhiteSpace(windowTitle);
+
+            if (isExplorer || isEmptyTitle) return "Desktop";
+
             return "Uncategorized";
         }
     }

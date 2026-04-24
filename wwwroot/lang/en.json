@@ -19,5 +19,7 @@
     "uncategorized": "Uncategorized",
     "process": "Process",
     "title": "Title",
-    "time": "Time"
+    "time": "Time",
+    "categorize_guide_title": "Quick Classification Guide",
+    "categorize_desc": "Manage classification rules here. Drag categories to set priority - the topmost matching category will be applied first. Use pipe-separated words (|) or Regex patterns."
 }
