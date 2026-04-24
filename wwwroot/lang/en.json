@@ -1,0 +1,23 @@
+{
+    "app_title": "Yorvis",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "refresh": "Refresh",
+    "total_active_time": "Total Active Time",
+    "current_window": "Current Window",
+    "top_categories": "Top Categories",
+    "recent_logs": "Recent Logs",
+    "system_settings": "System Settings",
+    "polling_interval": "Polling Interval (Seconds)",
+    "polling_desc": "Define how often Yorvis checks for foreground window changes.",
+    "language": "Language",
+    "layout_direction": "Layout Direction",
+    "rtl": "Right-to-Left (RTL)",
+    "ltr": "Left-to-Right (LTR)",
+    "save_settings": "Save Settings",
+    "settings_saved": "Settings Saved!",
+    "uncategorized": "Uncategorized",
+    "process": "Process",
+    "title": "Title",
+    "time": "Time"
+}

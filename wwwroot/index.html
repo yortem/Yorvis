@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html class="light" lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Yorvis | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+          tailwind.config = {
+            darkMode: "class",
+            theme: {
+              extend: {
+                "colors": {
+                        "primary": "#3525cd",
+                        "secondary": "#712ae2",
+                        "surface": "#f8f9ff",
+                        "background": "#f8f9ff",
+                        "on-surface": "#0b1c30",
+                        "on-surface-variant": "#464555",
+                        "outline-variant": "#c7c4d8",
+                        "error": "#ba1a1a"
+                },
+                "fontFamily": { "body-md": ["Manrope"] }
+              },
+            },
+          }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        
+        * { box-sizing: border-box; }
+
+        body { 
+            background-color: #f8f9ff; 
+            -webkit-user-select: none; 
+            user-select: none;
+            margin: 0;
+            padding: 0;
+            border: 1px solid #1e293b;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Draggable Title Bar */
+        .title-bar { 
+            -webkit-app-region: drag; 
+            background: #1e293b; 
+            color: white;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+            z-index: 1000;
+        }
+        .window-controls { -webkit-app-region: no-drag; display: flex; gap: 2px; }
+        .window-controls button { 
+            width: 32px; 
+            height: 32px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            transition: background 0.2s;
+        }
+        .window-controls button:hover { background: rgba(255,255,255,0.1); }
+        .window-controls .close-btn:hover { background: #ef4444; }
+
+        /* Unified Navigation */
+        .app-nav {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 20px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-shrink: 0;
+        }
+        .nav-link {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            -webkit-app-region: no-drag;
+        }
+        .nav-link.active {
+            color: #3525cd;
+            border-bottom-color: #3525cd;
+        }
+        
+        main {
+            flex-grow: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .view { 
+            display: none; 
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            height: 100%;
+        }
+        .view.active { display: block; }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid #f8f9ff; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .setting-row, .category-row {
+            transition: background 0.2s;
+            border: 1px solid #f1f5f9;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 4px;
+        }
+        .setting-row:hover, .category-row:hover { background-color: #f8fafc; border-color: #e2e8f0; }
+        
+        input[type="number"], select, input[type="text"], textarea, .no-drag {
+            -webkit-app-region: no-drag;
+        }
+
+        [dir="rtl"] .mr-4 { margin-right: 0; margin-left: 1rem; }
+        [dir="rtl"] .ml-4 { margin-left: 0; margin-right: 1rem; }
+    </style>
+</head>
+<body class="font-body-md text-on-surface bg-background antialiased">
+    <div class="title-bar">
+        <div class="flex items-center gap-2 no-drag">
+            <img src="favicon.ico" class="w-4 h-4">
+            <span data-i18n="app_title">Yorvis</span>
+        </div>
+        <div class="window-controls">
+            <button onclick="windowControl('minimize')" class="material-symbols-outlined text-[16px]">remove</button>
+            <button onclick="windowControl('maximize')" class="material-symbols-outlined text-[16px]">check_box_outline_blank</button>
+            <button onclick="windowControl('close')" class="material-symbols-outlined text-[16px] close-btn">close</button>
+        </div>
+    </div>
+
+    <nav class="app-nav">
+        <button onclick="showView('dashboard')" class="nav-link active" data-i18n="dashboard">Dashboard</button>
+        <button onclick="showView('categories')" class="nav-link">Categorize</button>
+        <button onclick="showView('settings')" class="nav-link" data-i18n="settings">Settings</button>
+    </nav>
+
+    <main>
+        <!-- Dashboard View -->
+        <div id="dashboard" class="view active">
+            <div class="grid grid-cols-12 gap-6 w-full">
+                <div class="col-span-12 lg:col-span-3 flex flex-col gap-4">
+                    <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[9px] font-black uppercase tracking-tighter text-slate-400" data-i18n="total_active_time">Total Time</span>
+                            <span class="material-symbols-outlined text-primary text-xs">timer</span>
+                        </div>
+                        <span id="totalTime" class="text-xl font-black text-primary tracking-tight">00:00:00</span>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[9px] font-black uppercase tracking-tighter text-slate-400" data-i18n="current_window">Current</span>
+                            <span class="material-symbols-outlined text-secondary text-xs">visibility</span>
+                        </div>
+                        <span id="currentProcess" class="text-xs font-bold block truncate">---</span>
+                        <span id="currentTitle" class="text-[10px] text-slate-400 truncate block mb-4">---</span>
+                        <div class="pt-4 border-t border-slate-50">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-span-12 lg:col-span-9 flex flex-col gap-4">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                            <h3 class="text-[9px] font-black uppercase text-slate-400 mb-3" data-i18n="top_categories">Categories</h3>
+                            <div id="categoryList" class="flex flex-col gap-3"></div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                            <h3 class="text-[9px] font-black uppercase text-slate-400 mb-3">Applications</h3>
+                            <div id="appList" class="flex flex-col gap-3"></div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                            <h3 class="text-[9px] font-black uppercase text-slate-400 mb-3">Window Titles</h3>
+                            <div id="titleList" class="flex flex-col gap-3"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-[9px] font-black uppercase text-slate-400" data-i18n="recent_logs">Recent Logs</h3>
+                            <button onclick="refreshData()" class="text-[9px] font-black text-primary hover:underline">REFRESH</button>
+                        </div>
+                        <div id="activityLog" class="flex flex-col divide-y divide-slate-50"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categorize View -->
+        <div id="categories" class="view">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-sm font-black text-slate-700 uppercase tracking-tight">Hierarchy</h2>
+                <button onclick="addNewCategory()" class="bg-primary text-white px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest no-drag">+ Root</button>
+            </div>
+            <div id="categoryEditorList" class="flex flex-col"></div>
+        </div>
+
+        <!-- Settings View -->
+        <div id="settings" class="view">
+            <h2 class="text-sm font-black text-slate-700 mb-4 uppercase tracking-tight">Settings</h2>
+            <div class="flex flex-col gap-1 w-full">
+                <div class="setting-row">
+                    <span class="text-xs font-bold text-slate-500 w-32 shrink-0">Start of Day</span>
+                    <input type="number" id="startOfDayInput" min="0" max="23" class="w-16 p-1 text-xs border rounded bg-slate-50 outline-none">
+                    <span class="text-[10px] text-slate-400">Hour (0-23) when tracking resets.</span>
+                </div>
+                <div class="setting-row">
+                    <span class="text-xs font-bold text-slate-500 w-32 shrink-0">Start of Week</span>
+                    <select id="startOfWeekInput" class="w-32 p-1 text-xs border rounded bg-slate-50 outline-none">
+                        <option value="0">Sunday</option>
+                        <option value="1">Monday</option>
+                        <option value="2">Tuesday</option>
+                        <option value="3">Wednesday</option>
+                        <option value="4">Thursday</option>
+                        <option value="5">Friday</option>
+                        <option value="6">Saturday</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <span class="text-xs font-bold text-slate-500 w-32 shrink-0" data-i18n="language">Language</span>
+                    <select id="langInput" class="w-32 p-1 text-xs border rounded bg-slate-50 outline-none">
+                        <option value="en">English</option>
+                        <option value="he">Hebrew</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <span class="text-xs font-bold text-slate-500 w-32 shrink-0">Layout</span>
+                    <select id="dirInput" class="w-32 p-1 text-xs border rounded bg-slate-50 outline-none">
+                        <option value="ltr">LTR (English)</option>
+                        <option value="rtl">RTL (Hebrew)</option>
+                    </select>
+                </div>
+                <div class="mt-4">
+                    <button onclick="saveSettings()" class="bg-primary text-white px-8 py-2 rounded text-[10px] font-black uppercase tracking-widest shadow-md hover:translate-y-[-1px] transition-all no-drag">Save All Config</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentLang = 'en';
+        let translations = {};
+        let localCategories = [];
+        let pieChart = null;
+        let activeViewId = 'dashboard';
+        let refreshInterval = null;
+        let forceNextRender = false;
+        let sortable = null;
+
+        async function loadLanguage(lang) {
+            try {
+                const response = await fetch(`./lang/${lang}.json`);
+                translations = await response.json();
+                currentLang = lang;
+                applyTranslations();
+            } catch (e) { console.error("Failed to load language", e); }
+        }
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[key]) el.innerText = translations[key];
+            });
+        }
+
+        function setDirection(dir) {
+            document.documentElement.dir = dir;
+            document.documentElement.lang = currentLang;
+        }
+
+        function showView(viewId) {
+            activeViewId = viewId;
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            const activeView = document.getElementById(viewId);
+            if(activeView) activeView.classList.add('active');
+            
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            const btn = document.querySelector(`button[onclick="showView('${viewId}')"]`);
+            if(btn) btn.classList.add('active');
+            
+            if (viewId === 'settings') window.external.sendMessage(JSON.stringify({ action: 'getSettings' }));
+            
+            if (viewId === 'dashboard') {
+                if(!refreshInterval) refreshInterval = setInterval(refreshData, 5000);
+                refreshData();
+            } else {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+                refreshData(); 
+            }
+        }
+
+        function windowControl(command) { window.external.sendMessage(JSON.stringify({ action: 'windowControl', command })); }
+        function refreshData() { window.external.sendMessage(JSON.stringify({ action: 'getStats' })); }
+
+        function saveSettings() {
+            const language = document.getElementById('langInput').value;
+            const isRtl = document.getElementById('dirInput').value === 'rtl';
+            const startOfDay = parseInt(document.getElementById('startOfDayInput').value);
+            const startOfWeek = parseInt(document.getElementById('startOfWeekInput').value);
+            window.external.sendMessage(JSON.stringify({ action: 'updateSettings', interval: 1, language, isRtl, startOfDay, startOfWeek }));
+            loadLanguage(language);
+            setDirection(isRtl ? 'rtl' : 'ltr');
+            alert(translations['settings_saved'] || 'Saved!');
+        }
+
+        function saveCategory(cat) {
+            window.external.sendMessage(JSON.stringify({ action: 'saveCategory', category: cat }));
+        }
+
+        function addNewCategory(parentId = null) {
+            forceNextRender = true;
+            saveCategory({ Id: 0, Name: 'New', Keywords: 'regex', Color: '#3525cd', ParentId: parentId, DisplayOrder: 999 });
+        }
+
+        function deleteCategory(id) {
+            if (confirm('Delete category?')) {
+                forceNextRender = true;
+                window.external.sendMessage(JSON.stringify({ action: 'deleteCategory', id: id }));
+                setTimeout(refreshData, 300);
+            }
+        }
+
+        window.external.receiveMessage(message => {
+            const data = JSON.parse(message);
+            if (data.action === 'statsData') {
+                localCategories = data.categories.filter(c => c.Name !== '_Settings');
+                updateUI(data.logs, localCategories, data.current);
+                
+                const focused = document.activeElement;
+                const isTyping = focused && (focused.tagName === 'INPUT' || focused.tagName === 'TEXTAREA') && document.getElementById('categories').contains(focused);
+                
+                if (!isTyping || forceNextRender || document.getElementById('categoryEditorList').innerHTML === '') {
+                    renderCategoryTree(localCategories);
+                    forceNextRender = false;
+                }
+            }
+            if (data.action === 'settingsData') {
+                document.getElementById('langInput').value = data.language || 'en';
+                document.getElementById('dirInput').value = data.isRtl ? 'rtl' : 'ltr';
+                document.getElementById('startOfDayInput').value = data.startOfDay;
+                document.getElementById('startOfWeekInput').value = data.startOfWeek;
+                loadLanguage(data.language || 'en');
+                setDirection(data.isRtl ? 'rtl' : 'ltr');
+            }
+        });
+
+        function renderCategoryTree(categories) {
+            const container = document.getElementById('categoryEditorList');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            // Simplified: Re-using sortable on root container
+            const roots = categories.filter(c => !c.ParentId);
+            roots.forEach(root => container.appendChild(createCategoryElement(root, categories, 0)));
+            
+            if(sortable) sortable.destroy();
+            sortable = new Sortable(container, {
+                animation: 150,
+                onEnd: () => {
+                    const items = Array.from(container.querySelectorAll('.category-row-wrapper'));
+                    items.forEach((item, index) => {
+                        const id = item.dataset.id;
+                        const cat = localCategories.find(c => c.Id == id);
+                        if (cat) {
+                            cat.DisplayOrder = index;
+                            // Update local list then save
+                            saveCategory(cat);
+                        }
+                    });
+                }
+            });
+        }
+
+        function createCategoryElement(cat, allCategories, level) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'category-row-wrapper';
+            wrapper.dataset.id = cat.Id;
+            const indent = level * 24;
+            const style = document.documentElement.dir === 'rtl' ? `padding-right: ${indent}px` : `padding-left: ${indent}px`;
+
+            wrapper.innerHTML = `
+                <div class="category-row" style="${style}">
+                    <span class="material-symbols-outlined text-slate-300 cursor-move">drag_indicator</span>
+                    <div class="w-1 h-5 rounded-full" style="background-color: ${cat.Color}"></div>
+                    <input type="text" value="${cat.Name}" onchange="updateCat(${cat.Id}, 'Name', this.value)" class="w-24 p-0 text-[11px] border-none font-bold bg-transparent outline-none" placeholder="Name">
+                    <input type="text" value="${cat.Keywords || ''}" onchange="updateCat(${cat.Id}, 'Keywords', this.value)" class="flex-grow p-1 text-[10px] border-none bg-slate-50/50 rounded font-mono outline-none" placeholder="Regex">
+                    <input type="color" value="${cat.Color}" onchange="updateCat(${cat.Id}, 'Color', this.value)" class="w-4 h-4 border-0 p-0 cursor-pointer bg-transparent">
+                    <button onclick="addNewCategory(${cat.Id})" class="no-drag text-slate-300 hover:text-primary material-symbols-outlined text-[16px]">add_circle</button>
+                    <button onclick="deleteCategory(${cat.Id})" class="no-drag text-slate-300 hover:text-error material-symbols-outlined text-[16px]">delete</button>
+                </div>
+            `;
+            
+            // Add children recursively
+            const children = allCategories.filter(c => c.ParentId === cat.Id);
+            const childrenContainer = document.createElement('div');
+            children.forEach(child => childrenContainer.appendChild(createCategoryElement(child, allCategories, level + 1)));
+            wrapper.appendChild(childrenContainer);
+            return wrapper;
+        }
+
+        function updateCat(id, field, value) {
+            const cat = localCategories.find(c => c.Id == id);
+            if (cat) { cat[field] = value; saveCategory(cat); }
+        }
+
+        // ... (remaining functions: updateUI, updatePieChart, renderList, formatDuration)
+        function updateUI(logs, categories, current) {
+            const getCatForLog = (process, title) => {
+                for (const cat of categories) {
+                    if (!cat.Keywords) continue;
+                    try {
+                        const regex = new RegExp(cat.Keywords, 'i');
+                        if (regex.test(title || "")) return cat.Name;
+                    } catch (e) {
+                        const keywords = (cat.Keywords || "").split('|');
+                        for (const k of keywords) {
+                            if ((title || "").toLowerCase().includes(k.trim().toLowerCase())) return cat.Name;
+                        }
+                    }
+                }
+                for (const cat of categories) {
+                    if (!cat.Keywords) continue;
+                    try {
+                        const regex = new RegExp(cat.Keywords, 'i');
+                        if (regex.test(process)) return cat.Name;
+                    } catch (e) {
+                        const keywords = (cat.Keywords || "").split('|');
+                        for (const k of keywords) {
+                            if (process.toLowerCase().includes(k.trim().toLowerCase())) return cat.Name;
+                        }
+                    }
+                }
+                return "Uncategorized";
+            };
+
+            const catMap = {};
+            categories.forEach(c => catMap[c.Name] = c.Color);
+            logs.forEach(log => { log.Category = getCatForLog(log.ProcessName, log.WindowTitle); });
+
+            let totalSeconds = logs.reduce((acc, log) => acc + log.DurationSeconds, 0);
+            if (totalSeconds === 0) totalSeconds = 1;
+            document.getElementById('totalTime').innerText = formatDuration(totalSeconds);
+
+            const catSummary = {};
+            logs.forEach(log => catSummary[log.Category] = (catSummary[catSummary[log.Category] || 0] ? (catSummary[log.Category] || 0) : 0) + log.DurationSeconds);
+            renderList('categoryList', catSummary, totalSeconds, name => catMap[name] || '#94a3b8');
+
+            const appSummary = {}, appToCat = {};
+            logs.forEach(log => {
+                appSummary[log.ProcessName] = (appSummary[log.ProcessName] || 0) + log.DurationSeconds;
+                appToCat[log.ProcessName] = log.Category;
+            });
+            renderList('appList', appSummary, totalSeconds, name => catMap[appToCat[name]] || '#3525cd');
+
+            const titleSummary = {}, titleToCat = {};
+            logs.forEach(log => {
+                titleSummary[log.WindowTitle] = (titleSummary[log.WindowTitle] || 0) + log.DurationSeconds;
+                titleToCat[log.WindowTitle] = log.Category;
+            });
+            renderList('titleList', titleSummary, totalSeconds, name => catMap[titleToCat[name]] || '#712ae2');
+
+            updatePieChart(catSummary, catMap);
+
+            const logContainer = document.getElementById('activityLog');
+            if(logContainer) {
+                logContainer.innerHTML = '';
+                logs.slice(0, 15).forEach(log => {
+                    const color = catMap[log.Category] || '#94a3b8';
+                    const timeStr = new Date(log.Timestamp).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                    logContainer.innerHTML += `
+                        <div class="py-1.5 flex items-center gap-3">
+                            <div class="w-1 h-5 rounded-full shrink-0" style="background-color: ${color}"></div>
+                            <div class="flex-grow min-w-0">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <span class="text-[11px] font-bold text-slate-700">${log.ProcessName}</span>
+                                        <span class="text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-tighter text-white" style="background-color: ${color}">${log.Category}</span>
+                                    </div>
+                                    <span class="text-[9px] font-bold text-slate-400 shrink-0">${timeStr} • ${formatDuration(log.DurationSeconds)}</span>
+                                </div>
+                                <span class="text-[9px] text-slate-400 truncate block">${log.WindowTitle}</span>
+                            </div>
+                        </div>`;
+                });
+            }
+            
+            if (current) {
+                document.getElementById('currentProcess').innerText = current.process;
+                document.getElementById('currentTitle').innerText = current.title;
+            } else if (logs.length > 0) {
+                document.getElementById('currentProcess').innerText = logs[0].ProcessName;
+                document.getElementById('currentTitle').innerText = logs[0].WindowTitle;
+            }
+        }
+
+        function updatePieChart(summary, catMap) {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            const labels = Object.keys(summary);
+            const data = Object.values(summary);
+            const colors = labels.map(l => catMap[l] || '#94a3b8');
+            if (pieChart) {
+                pieChart.data.labels = labels;
+                pieChart.data.datasets[0].data = data;
+                pieChart.data.datasets[0].backgroundColor = colors;
+                pieChart.update();
+            } else {
+                pieChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 0 }] },
+                    options: { responsive: true, animation: false, plugins: { legend: { display: false } } }
+                });
+            }
+        }
+
+        function renderList(elementId, summary, totalSeconds, colorFn) {
+            const container = document.getElementById(elementId);
+            if(!container) return;
+            container.innerHTML = '';
+            Object.entries(summary).sort((a,b) => b[1] - a[1]).slice(0, 5).forEach(([name, sec]) => {
+                const percent = (sec / totalSeconds * 100).toFixed(0);
+                container.innerHTML += `
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-[10px]">
+                            <span class="font-bold truncate max-w-[60%] text-slate-500">${name || 'Unknown'}</span>
+                            <span class="text-slate-300 font-bold">${formatDuration(sec)}</span>
+                        </div>
+                        <div class="w-full h-1 bg-slate-50 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full" style="width: ${percent}%; background-color: ${colorFn(name)}"></div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function formatDuration(sec) {
+            const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = Math.floor(sec % 60);
+            return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        }
+
+        showView('dashboard');
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>

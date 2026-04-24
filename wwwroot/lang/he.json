@@ -1,0 +1,23 @@
+{
+    "app_title": "Yorvis",
+    "dashboard": "לוח בקרה",
+    "settings": "הגדרות",
+    "refresh": "רענן",
+    "total_active_time": "זמן פעילות כולל",
+    "current_window": "חלון פעיל",
+    "top_categories": "קטגוריות מובילות",
+    "recent_logs": "יומן פעילות אחרון",
+    "system_settings": "הגדרות מערכת",
+    "polling_interval": "מרווח דגימה (שניות)",
+    "polling_desc": "קבע באיזו תדירות Yorvis בודק שינויים בחלון הפעיל.",
+    "language": "שפה",
+    "layout_direction": "כיוון תצוגה",
+    "rtl": "מימין לשמאל (RTL)",
+    "ltr": "משמאל לימין (LTR)",
+    "save_settings": "שמור הגדרות",
+    "settings_saved": "ההגדרות נשמרו בהצלחה!",
+    "uncategorized": "ללא קטגוריה",
+    "process": "תהליך",
+    "title": "כותרת",
+    "time": "זמן"
+}

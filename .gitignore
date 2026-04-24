@@ -1,0 +1,20 @@
+# .NET
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.doccache
+
+# SQLite
+*.db3
+*.db3-journal
+*.db3-shm
+*.db3-wal
+
+# Photino / Web
+wwwroot/lang/*.json.bak
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
