@@ -29,5 +29,7 @@ namespace Yorvis.Models
         public int StartOfWeekDay { get; set; }
         public int DisplayOrder { get; set; } 
         public string? BlacklistKeywords { get; set; }
+        public string? Theme { get; set; }
+        public bool StartWithWindows { get; set; }
     }
 }

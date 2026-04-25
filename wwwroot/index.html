@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <script id="tailwind-config">
           tailwind.config = {
@@ -15,27 +15,59 @@
             theme: {
               extend: {
                 "colors": {
-                        "primary": "#3525cd",
+                        "primary": "var(--primary)",
                         "secondary": "#712ae2",
-                        "surface": "#f8f9ff",
-                        "background": "#f8f9ff",
-                        "on-surface": "#0b1c30",
-                        "on-surface-variant": "#464555",
-                        "outline-variant": "#c7c4d8",
+                        "surface": "var(--surface)",
+                        "background": "var(--background)",
+                        "hover": "var(--hover-bg)",
+                        "on-surface": "var(--on-surface)",
+                        "on-surface-variant": "var(--on-surface-variant)",
+                        "outline-variant": "var(--outline-variant)",
                         "error": "#ba1a1a"
                 },
-                "fontFamily": { "body-md": ["Manrope"] }
+                "fontFamily": { "body-md": ["'Open Sans'", "sans-serif"] }
               },
             },
           }
     </script>
     <style>
+        :root {
+            --primary: #3525cd;
+            --background: #f8f9ff;
+            --surface: #ffffff;
+            --hover-bg: #f8fafc; /* Back to original subtle hover for light theme */
+            --on-surface: #0b1c30;
+            --on-surface-variant: #464555;
+            --outline-variant: #c7c4d8;
+            --card-bg: #ffffff;
+            --border-color: #f1f5f9;
+            --nav-bg: #ffffff;
+            --nav-border: #e2e8f0;
+            --text-secondary: #64748b;
+        }
+
+        .dark {
+            --primary: #a5b4fc; 
+            --background: #0f172a;
+            --surface: #1e293b;
+            --hover-bg: #2d3748; /* Distinct hover color for dark theme */
+            --on-surface: #f1f5f9;
+            --on-surface-variant: #94a3b8;
+            --outline-variant: #334155;
+            --card-bg: #1e293b;
+            --border-color: #1e293b;
+            --nav-border: #1e293b;
+            --text-secondary: #94a3b8;
+        }
+
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
         
         * { box-sizing: border-box; }
 
         body { 
-            background-color: #f8f9ff; 
+            font-family: 'Open Sans', sans-serif;
+            background-color: var(--background); 
+            color: var(--on-surface);
             -webkit-user-select: none; 
             user-select: none;
             margin: 0;
@@ -46,11 +78,13 @@
             flex-direction: column;
             overflow: hidden;
         }
+
+        .dark body { border-color: var(--background); }
         
         /* Draggable Title Bar */
         .title-bar, .app-header { 
             -webkit-app-region: drag; 
-            background: #1e293b; 
+            background: #0f172a; /* Even darker */
             color: white;
             height: 32px;
             display: flex;
@@ -76,8 +110,8 @@
 
         /* Unified Navigation */
         .app-nav {
-            background: white;
-            border-bottom: 1px solid #e2e8f0;
+            background: var(--nav-bg);
+            border-bottom: 1px solid var(--nav-border);
             padding: 0 20px;
             height: 40px;
             display: flex;
@@ -88,7 +122,7 @@
         .nav-link {
             font-size: 13px;
             font-weight: 600;
-            color: #64748b;
+            color: var(--text-secondary);
             height: 100%;
             display: flex;
             align-items: center;
@@ -97,8 +131,8 @@
             -webkit-app-region: no-drag;
         }
         .nav-link.active {
-            color: #3525cd;
-            border-bottom-color: #3525cd;
+            color: var(--primary);
+            border-bottom-color: var(--primary);
         }
         
         main {
@@ -120,23 +154,49 @@
         /* Scrollbar Styling */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid #f8f9ff; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid var(--background); }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; border: 2px solid var(--background); }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         .setting-row, .category-row {
-            transition: background 0.2s;
-            border: 1px solid #f1f5f9;
-            background: white;
-            padding: 8px 12px;
-            border-radius: 6px;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            padding: 10px 14px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
         }
-        .setting-row:hover, .category-row:hover { background-color: #f8fafc; border-color: #e2e8f0; }
+        .setting-row:hover { 
+            background-color: var(--hover-bg); 
+            border-color: var(--nav-border);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            transform: translateX(2px);
+        }
         
-        input[type="number"], select, input[type="text"], textarea, .no-drag {
+        .category-input {
+            background: var(--background) !important;
+            border: 1px solid transparent !important;
+            height: 28px;
+            padding: 0 8px !important;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .category-input:hover, .category-input:focus {
+            border-color: var(--outline-variant) !important;
+            background: var(--card-bg) !important;
+        }
+        
+        input[type="number"], select, input[type="text"], textarea {
+            background-color: var(--background);
+            color: var(--on-surface);
+            border: 1px solid var(--border-color);
+        }
+
+        .no-drag {
             -webkit-app-region: no-drag;
         }
 
@@ -155,10 +215,10 @@
             display: flex;
             flex-direction: row;
             height: 60px;
-            background: #f8fafc;
+            background: var(--background);
             border-radius: 12px;
             overflow: visible;
-            border: 2px solid #f1f5f9;
+            border: 2px solid var(--border-color);
             direction: ltr;
             position: relative;
         }
@@ -215,13 +275,13 @@
             text-align: right;
             font-size: 10px;
             font-weight: 800;
-            color: #94a3b8;
+            color: var(--text-secondary);
             padding-top: 12px;
             flex-shrink: 0;
         }
         .timeline-dot-path {
             width: 3px;
-            background: linear-gradient(to bottom, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+            background: linear-gradient(to bottom, var(--border-color) 0%, var(--nav-border) 50%, var(--border-color) 100%);
             position: relative;
             display: flex;
             justify-content: center;
@@ -234,7 +294,7 @@
             width: 14px;
             height: 14px;
             border-radius: 999px;
-            border: 3px solid white;
+            border: 3px solid var(--card-bg);
             position: absolute;
             top: 14px;
             z-index: 2;
@@ -246,8 +306,8 @@
             width: 100%;
             font-size: 10px;
             font-weight: 900;
-            color: #94a3b8;
-            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
             margin-bottom: 4px;
         }
         .timeline-ruler .ruler-mark {
@@ -259,16 +319,16 @@
         }
         .timeline-content {
             flex-grow: 1;
-            background: white;
+            background: var(--card-bg);
             padding: 12px 16px;
             border-radius: 16px;
-            border: 1px solid #f1f5f9;
+            border: 1px solid var(--border-color);
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
             transition: all 0.2s;
             margin-bottom: 12px;
         }
         .timeline-content:hover {
-            border-color: #e2e8f0;
+            border-color: var(--nav-border);
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04);
             transform: translateX(4px);
         }
@@ -288,8 +348,8 @@
             display: none;
             position: fixed;
             z-index: 2000;
-            background: white;
-            border: 1px solid #e2e8f0;
+            background: var(--card-bg);
+            border: 1px solid var(--nav-border);
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
             border-radius: 8px;
             padding: 4px;
@@ -299,14 +359,14 @@
             padding: 8px 12px;
             font-size: 11px;
             font-weight: 600;
-            color: #475569;
+            color: var(--on-surface-variant);
             cursor: pointer;
             border-radius: 4px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        .context-item:hover { background: #f1f5f9; color: #3525cd; }
+        .context-item:hover { background: var(--hover-bg); color: var(--primary); }
 
         /* Quick Modal */
         #quickModal {
@@ -324,9 +384,10 @@
             display: flex;
             gap: 8px;
             margin-bottom: 24px;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid var(--border-color);
             padding-bottom: 8px;
         }
+        .dark .sub-nav { border-bottom-color: transparent; }
         .sub-nav-btn {
             padding: 6px 16px;
             border-radius: 8px;
@@ -334,25 +395,38 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: #94a3b8;
+            color: var(--text-secondary);
             transition: all 0.2s;
             cursor: pointer;
         }
         .sub-nav-btn.active {
-            background: #3525cd;
+            background: var(--primary);
             color: white;
             box-shadow: 0 4px 10px rgba(53, 37, 205, 0.2);
         }
         .sub-view { display: none; }
         .sub-view.active { display: block; animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* General Tailwind Overrides for Dark Mode */
+        .dark .bg-white { background-color: var(--card-bg) !important; }
+        .dark .bg-slate-50 { background-color: var(--background) !important; }
+        .dark .bg-slate-100 { background-color: var(--outline-variant) !important; }
+        .dark .border-slate-100 { border-color: var(--nav-border) !important; }
+        .dark .border-slate-50 { border-color: var(--nav-border) !important; }
+        .dark .divide-slate-50 > :not([hidden]) ~ :not([hidden]) { border-color: var(--nav-border) !important; }
+        .dark .text-slate-400 { color: var(--on-surface-variant) !important; }
+        .dark .text-slate-500 { color: var(--on-surface-variant) !important; }
+        .dark .text-slate-600 { color: var(--on-surface-variant) !important; }
+        .dark .text-slate-700 { color: var(--on-surface) !important; }
+        .dark .text-slate-800 { color: var(--on-surface) !important; }
     </style>
 </head>
 <body class="font-body-md text-on-surface bg-background antialiased">
     <div class="title-bar">
         <div class="flex items-center gap-2 no-drag">
             <img src="favicon.ico" class="w-[14px] h-[14px] opacity-80" alt="icon">
-            <span class="text-[10px] opacity-50 font-black uppercase tracking-widest" data-i18n="app_title">Yorvis</span>
+            <span class="text-[10px] font-black uppercase tracking-widest" data-i18n="app_title">Yorvis</span>
         </div>
         <div class="window-controls">
             <button onclick="windowControl('minimize')" class="material-symbols-outlined text-[16px]">remove</button>
@@ -363,8 +437,8 @@
 
     <nav class="app-nav">
         <button onclick="showView('dashboard')" class="nav-link active" data-i18n="dashboard">Dashboard</button>
-        <button onclick="showView('timeline')" class="nav-link">Timeline</button>
-        <button onclick="showView('categories')" class="nav-link">Categorize</button>
+        <button onclick="showView('timeline')" class="nav-link" data-i18n="timeline">Timeline</button>
+        <button onclick="showView('categories')" class="nav-link" data-i18n="categorize">Categorize</button>
         <button onclick="showView('settings')" class="nav-link" data-i18n="settings">Settings</button>
     </nav>
 
@@ -375,9 +449,9 @@
             <div class="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-6">
                 <div class="flex items-center gap-4">
                     <div class="flex bg-slate-50 p-1 rounded-lg">
-                        <button id="filter-day" onclick="setFilter('day')" class="filter-btn px-4 py-1.5 rounded-md text-[11px] font-bold transition-all">Day</button>
-                        <button id="filter-week" onclick="setFilter('week')" class="filter-btn px-4 py-1.5 rounded-md text-[11px] font-bold transition-all">Week</button>
-                        <button id="filter-month" onclick="setFilter('month')" class="filter-btn px-4 py-1.5 rounded-md text-[11px] font-bold transition-all">Month</button>
+                        <button id="filter-day" onclick="setFilter('day')" class="filter-btn px-4 py-1.5 rounded-md text-[11px] font-bold transition-all" data-i18n="day">Day</button>
+                        <button id="filter-week" onclick="setFilter('week')" class="filter-btn px-4 py-1.5 rounded-md text-[11px] font-bold transition-all" data-i18n="week">Week</button>
+                        <button id="filter-month" onclick="setFilter('month')" class="filter-btn px-4 py-1.5 rounded-md text-[11px] font-bold transition-all" data-i18n="month">Month</button>
                     </div>
                     <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 no-drag">
                         <span class="material-symbols-outlined text-slate-400 text-[18px]">calendar_today</span>
@@ -398,7 +472,7 @@
                         <span id="totalTime" class="text-xl font-black text-primary tracking-tight">00:00:00</span>
                         <div class="mt-4 pt-4 border-t border-slate-50">
                             <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-black uppercase tracking-tighter text-slate-400">System Clock</span>
+                                <span class="text-[9px] font-black uppercase tracking-tighter text-slate-400" data-i18n="system_clock">System Clock</span>
                                 <span class="material-symbols-outlined text-slate-400 text-xs">schedule</span>
                             </div>
                             <span id="digitalClock" class="text-xl font-black text-slate-800 tracking-tight">00:00:00</span>
@@ -416,7 +490,7 @@
 
                     <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="text-[9px] font-black uppercase tracking-tighter text-slate-400">Breakdown</span>
+                            <span class="text-[9px] font-black uppercase tracking-tighter text-slate-400" data-i18n="breakdown">Breakdown</span>
                             <span class="material-symbols-outlined text-slate-400 text-xs">donut_large</span>
                         </div>
                         <div class="pt-2">
@@ -432,11 +506,11 @@
                             <div id="categoryList" class="flex flex-col gap-3"></div>
                         </div>
                         <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
-                            <h3 class="text-[9px] font-black uppercase text-slate-400 mb-3">Applications</h3>
+                            <h3 class="text-[9px] font-black uppercase text-slate-400 mb-3" data-i18n="applications">Applications</h3>
                             <div id="appList" class="flex flex-col gap-3"></div>
                         </div>
                         <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
-                            <h3 class="text-[9px] font-black uppercase text-slate-400 mb-3">Window Titles</h3>
+                            <h3 class="text-[9px] font-black uppercase text-slate-400 mb-3" data-i18n="window_titles">Window Titles</h3>
                             <div id="titleList" class="flex flex-col gap-3"></div>
                         </div>
                     </div>
@@ -444,7 +518,7 @@
                     <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="text-[9px] font-black uppercase text-slate-400" data-i18n="recent_logs">Recent Logs</h3>
-                            <button onclick="refreshData()" class="text-[9px] font-black text-primary hover:underline">REFRESH</button>
+                            <button onclick="refreshData()" class="text-[9px] font-black text-primary hover:underline" data-i18n="refresh_button">REFRESH</button>
                         </div>
                         <div id="activityLog" class="flex flex-col divide-y divide-slate-50"></div>
                     </div>
@@ -455,7 +529,7 @@
         <!-- Timeline View -->
         <div id="timeline" class="view">
             <div class="flex flex-wrap items-center gap-2 mb-8 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                <span class="text-[10px] font-black text-slate-400 uppercase mr-2 ml-2">Range:</span>
+                <span class="text-[10px] font-black text-slate-400 uppercase mr-2 ml-2" data-i18n="range">Range:</span>
                 <button onclick="setTimelineRange(0.25)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">15m</button>
                 <button onclick="setTimelineRange(0.5)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">30m</button>
                 <button onclick="setTimelineRange(1)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-primary text-white shadow-sm">1h</button>
@@ -468,8 +542,8 @@
                 <button onclick="setTimelineRange(48)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">48h</button>
                 
                 <div class="flex bg-slate-100 p-1 rounded-lg no-drag ms-4 mr-4">
-                    <button onclick="setTimelineMode('vertical')" id="mode-vertical" class="px-3 py-1 rounded-md text-[9px] font-black uppercase transition-all">Stream</button>
-                    <button onclick="setTimelineMode('horizontal')" id="mode-horizontal" class="px-3 py-1 rounded-md text-[9px] font-black uppercase transition-all">Map</button>
+                    <button onclick="setTimelineMode('vertical')" id="mode-vertical" class="px-3 py-1 rounded-md text-[9px] font-black uppercase transition-all" data-i18n="stream">Stream</button>
+                    <button onclick="setTimelineMode('horizontal')" id="mode-horizontal" class="px-3 py-1 rounded-md text-[9px] font-black uppercase transition-all" data-i18n="map">Map</button>
                 </div>
 
                 <button onclick="refreshData()" class="ms-auto flex items-center gap-1 text-[10px] font-black text-primary hover:underline no-drag">
@@ -484,7 +558,7 @@
                     <div class="relative flex items-center flex-grow max-w-md group">
                         <div class="absolute left-0 top-1/2 -translate-y-1/2 right-0 bottom-0 bg-gradient-to-r from-primary/5 to-transparent rounded-full transition-all duration-300 opacity-0 group-focus-within:opacity-100"></div>
                         <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] text-slate-400 transition-all duration-200 group-focus-within:text-primary group-focus-within:scale-110">search</span>
-                        <input type="text" id="timelineSearch" placeholder="Search activities in timeline..." oninput="refreshData()" class="relative bg-white border-2 border-slate-100 rounded-full py-2.5 pl-12 pr-6 text-xs font-medium text-slate-600 outline-none focus:border-primary/30 focus:bg-white focus:shadow-lg focus:shadow-primary/10 w-full transition-all duration-200 no-drag">
+                        <input type="text" id="timelineSearch" placeholder="Search activities in timeline..." data-i18n-placeholder="timeline_search_placeholder" oninput="refreshData()" class="relative bg-white border-2 border-slate-100 rounded-full py-2.5 pl-12 pr-6 text-xs font-medium text-slate-600 outline-none focus:border-primary/30 focus:bg-white focus:shadow-lg focus:shadow-primary/10 w-full transition-all duration-200 no-drag">
                         <button onclick="document.getElementById('timelineSearch').value='';refreshData()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors">
                             <span class="material-symbols-outlined text-[16px]">close</span>
                         </button>
@@ -513,8 +587,8 @@
         <!-- Categorize View -->
         <div id="categories" class="view">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-sm font-black text-slate-700 uppercase tracking-tight">Hierarchy</h2>
-                <button onclick="addNewCategory()" class="bg-primary text-white px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest no-drag">+ Root</button>
+                <h2 class="text-sm font-black text-slate-700 uppercase tracking-tight" data-i18n="hierarchy">Hierarchy</h2>
+                <button onclick="addNewCategory()" class="bg-primary text-white px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest no-drag" data-i18n="add_root">+ Root</button>
             </div>
             
             <div class="bg-primary/5 border-l-4 border-primary p-4 rounded-r-xl mb-8 shadow-sm">
@@ -536,7 +610,7 @@
 
         <!-- Settings View -->
         <div id="settings" class="view">
-            <h2 class="text-sm font-black text-slate-700 mb-6 uppercase tracking-tight">System Settings</h2>
+            <h2 class="text-sm font-black text-slate-700 mb-6 uppercase tracking-tight" data-i18n="system_settings">System Settings</h2>
             
             <div class="sub-nav no-drag">
                 <button onclick="showSettingsSubTab('general')" id="btn-sub-general" class="sub-nav-btn active">General</button>
@@ -546,20 +620,20 @@
             <div id="settings-general" class="sub-view active">
                 <div class="flex flex-col gap-1 w-full">
                     <div class="setting-row">
-                        <span class="text-xs font-bold text-slate-500 w-32 shrink-0">Start of Day</span>
+                        <span class="text-xs font-bold text-slate-500 w-32 shrink-0" data-i18n="start_of_day">Start of Day</span>
                         <input type="number" id="startOfDayInput" min="0" max="23" class="w-16 p-1 text-xs border rounded bg-slate-50 outline-none">
                         <span class="text-[10px] text-slate-400">Hour (0-23) when tracking resets.</span>
                     </div>
                     <div class="setting-row">
-                        <span class="text-xs font-bold text-slate-500 w-32 shrink-0">Start of Week</span>
+                        <span class="text-xs font-bold text-slate-500 w-32 shrink-0" data-i18n="start_of_week">Start of Week</span>
                         <select id="startOfWeekInput" class="w-32 p-1 text-xs border rounded bg-slate-50 outline-none">
-                            <option value="0">Sunday</option>
-                            <option value="1">Monday</option>
-                            <option value="2">Tuesday</option>
-                            <option value="3">Wednesday</option>
-                            <option value="4">Thursday</option>
-                            <option value="5">Friday</option>
-                            <option value="6">Saturday</option>
+                            <option value="0" data-i18n="sunday">Sunday</option>
+                            <option value="1" data-i18n="monday">Monday</option>
+                            <option value="2" data-i18n="tuesday">Tuesday</option>
+                            <option value="3" data-i18n="wednesday">Wednesday</option>
+                            <option value="4" data-i18n="thursday">Thursday</option>
+                            <option value="5" data-i18n="friday">Friday</option>
+                            <option value="6" data-i18n="saturday">Saturday</option>
                         </select>
                     </div>
                     <div class="setting-row">
@@ -570,22 +644,34 @@
                         </select>
                     </div>
                     <div class="setting-row">
-                        <span class="text-xs font-bold text-slate-500 w-32 shrink-0">Layout</span>
+                        <span class="text-xs font-bold text-slate-500 w-32 shrink-0" data-i18n="layout">Layout</span>
                         <select id="dirInput" class="w-32 p-1 text-xs border rounded bg-slate-50 outline-none">
-                            <option value="ltr">LTR (English)</option>
-                            <option value="rtl">RTL (Hebrew)</option>
+                            <option value="ltr" data-i18n="ltr">LTR (English)</option>
+                            <option value="rtl" data-i18n="rtl">RTL (Hebrew)</option>
                         </select>
                     </div>
+                    <div class="setting-row">
+                        <span class="text-xs font-bold text-slate-500 w-32 shrink-0" data-i18n="theme">Theme</span>
+                        <select id="themeInput" class="w-32 p-1 text-xs border rounded bg-slate-50 outline-none">
+                            <option value="light" data-i18n="light">Light</option>
+                            <option value="dark" data-i18n="dark">Dark</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <span class="text-xs font-bold text-slate-500 w-32 shrink-0" data-i18n="open_on_startup">Open on Startup</span>
+                        <input type="checkbox" id="startupInput" class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary no-drag">
+                        <span class="text-[10px] text-slate-400 ms-2">Launch Yorvis automatically when Windows starts.</span>
+                    </div>
                     <div class="mt-8 pt-6 border-t border-slate-100">
-                        <h3 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest">Privacy & Exclusions</h3>
+                        <h3 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest" data-i18n="privacy_exclusions">Privacy & Exclusions</h3>
                         <div class="flex flex-col gap-2">
-                            <label class="text-[11px] font-bold text-slate-500">Exclusion Keywords (Blacklist)</label>
+                            <label class="text-[11px] font-bold text-slate-500" data-i18n="exclusion_keywords">Exclusion Keywords (Blacklist)</label>
                             <textarea id="blacklistInput" class="w-full h-24 p-3 text-xs border rounded bg-slate-50 outline-none focus:border-primary font-mono" placeholder="incognito|private|secret..."></textarea>
-                            <p class="text-[9px] text-slate-400 italic">Activities matching these keywords (regex) will not be saved to the database. Split with |.</p>
+                            <p class="text-[9px] text-slate-400 italic" data-i18n="exclusion_desc">Activities matching these keywords (regex) will not be saved to the database. Split with |.</p>
                         </div>
                     </div>
                     <div class="mt-8">
-                        <button onclick="saveSettings()" class="bg-primary text-white px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:translate-y-[-1px] transition-all no-drag">Save All Config</button>
+                        <button onclick="saveSettings()" class="bg-primary text-white px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:translate-y-[-1px] transition-all no-drag" data-i18n="save_all_config">Save All Config</button>
                     </div>
                 </div>
             </div>
@@ -594,30 +680,45 @@
                 <div class="flex flex-col gap-6">
                     <div class="flex flex-col gap-2">
                         <div class="flex justify-between items-center py-2 border-b border-slate-100">
-                            <span class="text-xs font-bold text-slate-500">Database Size</span>
+                            <span class="text-xs font-bold text-slate-500" data-i18n="database_size">Database Size</span>
                             <span id="dbSizeText" class="text-xs font-black text-slate-700">0.00 MB</span>
                         </div>
                         <div class="flex justify-between items-center py-2 border-b border-slate-100">
-                            <span class="text-xs font-bold text-slate-500">Total Activity Records</span>
+                            <span class="text-xs font-bold text-slate-500" data-i18n="total_activity_records">Total Activity Records</span>
                             <span id="dbRecordsText" class="text-xs font-black text-slate-700">0 records</span>
                         </div>
                     </div>
 
                     <div class="flex flex-col gap-4">
                         <div class="bg-slate-50 p-4 rounded-lg">
-                            <h4 class="text-[9px] font-black uppercase text-slate-400 mb-3 tracking-widest">Partial Cleanup</h4>
+                            <h4 class="text-[9px] font-black uppercase text-slate-400 mb-3 tracking-widest" data-i18n="partial_cleanup">Partial Cleanup</h4>
                             <div class="flex items-center gap-3">
-                                <span class="text-[11px] text-slate-500">Keep last</span>
+                                <span class="text-[11px] text-slate-500" data-i18n="keep_last">Keep last</span>
                                 <input type="number" id="retentionDaysInput" value="365" class="w-16 p-1 text-xs border rounded bg-white outline-none">
-                                <span class="text-[11px] text-slate-500">days</span>
-                                <button onclick="cleanupLogs()" class="ms-auto bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-3 py-1.5 rounded text-[9px] font-black uppercase tracking-widest transition-all no-drag">Run Cleanup</button>
+                                <span class="text-[11px] text-slate-500" data-i18n="days">days</span>
+                                <button onclick="cleanupLogs()" class="ms-auto bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-3 py-1.5 rounded text-[9px] font-black uppercase tracking-widest transition-all no-drag" data-i18n="run_cleanup">Run Cleanup</button>
                             </div>
                         </div>
 
                         <div class="mt-2">
-                            <button onclick="resetData()" class="text-[9px] font-black uppercase text-red-300 hover:text-red-500 transition-colors no-drag">Full Database Reset</button>
+                            <button onclick="resetData()" class="text-[9px] font-black uppercase text-red-300 hover:text-red-500 transition-colors no-drag" data-i18n="full_database_reset">Full Database Reset</button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Settings Footer -->
+            <div class="mt-auto pt-12 pb-4 text-center">
+                <div class="flex flex-col items-center gap-2">
+                    <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-300">
+                        <span data-i18n="created_by">Created by</span>
+                        <span class="text-primary opacity-60">Yortem</span>
+                    </div>
+                    <a href="https://github.com/yortem/Yorvis" target="_blank" class="no-drag flex items-center gap-1.5 text-[9px] font-bold text-slate-400 hover:text-primary transition-colors group">
+                        <span class="material-symbols-outlined text-[14px]">help</span>
+                        <span data-i18n="support_github">Support & Documentation on GitHub</span>
+                        <span class="material-symbols-outlined text-[12px] opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1">arrow_forward</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -626,32 +727,32 @@
     <div id="contextMenu">
         <div class="context-item" onclick="openQuickCategorize()">
             <span class="material-symbols-outlined text-[16px]">category</span>
-            <span>Categorize This...</span>
+            <span data-i18n="quick_categorize">Categorize This...</span>
         </div>
     </div>
 
     <div id="quickModal">
         <div class="bg-white w-[400px] rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
             <div class="bg-slate-50 p-4 border-bottom border-slate-100 flex justify-between items-center">
-                <h3 class="text-xs font-black uppercase text-slate-500 tracking-widest">Quick Categorize</h3>
+                <h3 class="text-xs font-black uppercase text-slate-500 tracking-widest" data-i18n="quick_categorize">Quick Categorize</h3>
                 <button onclick="closeQuickModal()" class="material-symbols-outlined text-slate-400 hover:text-slate-600">close</button>
             </div>
             <div class="p-6 flex flex-col gap-4">
                 <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block">Reference</label>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block" data-i18n="reference">Reference</label>
                     <div id="quickRefText" class="text-[11px] font-mono bg-slate-50 p-2 rounded border border-slate-100 text-slate-600 break-all"></div>
                 </div>
                 <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block">Keyword to Add</label>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block" data-i18n="keyword_to_add">Keyword to Add</label>
                     <input type="text" id="quickKeyword" class="w-full p-2 text-xs border rounded bg-slate-50 outline-none focus:border-primary">
-                    <p class="text-[9px] text-slate-400 mt-1 italic">Trimming the title to the core word is recommended.</p>
+                    <p class="text-[9px] text-slate-400 mt-1 italic" data-i18n="quick_categorize_tip">Trimming the title to the core word is recommended.</p>
                 </div>
                 <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block">Target Category</label>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block" data-i18n="target_category">Target Category</label>
                     <select id="quickCatSelect" class="w-full p-2 text-xs border rounded bg-slate-50 outline-none focus:border-primary"></select>
                 </div>
                 <div class="mt-2">
-                    <button onclick="submitQuickCategorize()" class="w-full bg-primary text-white py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all">Add to Category</button>
+                    <button onclick="submitQuickCategorize()" class="w-full bg-primary text-white py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all" data-i18n="add_to_category">Add to Category</button>
                 </div>
             </div>
         </div>
@@ -839,6 +940,10 @@
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 if (translations[key]) el.innerText = translations[key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (translations[key]) el.placeholder = translations[key];
             });
         }
 
@@ -1050,7 +1155,7 @@
             container.innerHTML = '';
             legend.innerHTML = '';
             statsContainer.innerHTML = '';
-            container.className = `timeline-container ${timelineMode}`;
+            container.className = `timeline-container ${timelineMode} ${timelineMode === 'vertical' ? 'flex flex-col divide-y divide-slate-50' : ''}`;
             if (ruler) ruler.classList.add('hidden');
 
             const rangeStartMs = filterStart.getTime();
@@ -1068,18 +1173,18 @@
                 container.innerHTML = `
                     <div class="w-full h-64 flex flex-col items-center justify-center gap-4 text-slate-300">
                         <span class="material-symbols-outlined text-4xl opacity-20">history</span>
-                        <div class="text-[10px] font-black uppercase tracking-widest">No Activity Tracked in this range</div>
+                        <div class="text-[10px] font-black uppercase tracking-widest">${translations['no_activity_tracked'] || 'No Activity Tracked in this range'}</div>
                     </div>`;
                 const idleSec = catStats["Idle / Away"] || 0;
                 const activeSec = (rangeEndMs - rangeStartMs) / 1000 - idleSec;
                 statsContainer.innerHTML = `
                     <div class="col-span-2 md:col-span-4 flex gap-4">
                         <div class="flex-1 bg-white p-3 rounded-lg border border-slate-100">
-                            <div class="text-[9px] font-black uppercase text-slate-400 mb-1">Active</div>
+                            <div class="text-[9px] font-black uppercase text-slate-400 mb-1">${translations['active'] || 'Active'}</div>
                             <div class="text-sm font-black text-slate-700">${formatDuration(activeSec)}</div>
                         </div>
                         <div class="flex-1 bg-white p-3 rounded-lg border border-slate-100">
-                            <div class="text-[9px] font-black uppercase text-slate-400 mb-1">Idle / AFK</div>
+                            <div class="text-[9px] font-black uppercase text-slate-400 mb-1">${translations['idle_away'] || 'Idle / AFK'}</div>
                             <div class="text-sm font-black text-slate-500">${formatDuration(idleSec)}</div>
                         </div>
                     </div>
@@ -1088,7 +1193,8 @@
             }
 
             if (timelineMode === 'vertical') {
-                const groups = groupActivities(filteredLogs, 100);
+                const maxGap = searchQuery ? 300 : 0; // 5 minutes gap allowed when searching
+                const groups = groupActivities(filteredLogs, 100, maxGap);
                 let lastLogTime = rangeEndMs;
 
                 groups.forEach((group, idx) => {
@@ -1101,7 +1207,7 @@
                             <div class="flex items-center gap-4 py-4 opacity-30">
                                 <div class="timeline-time">${new Date(logTime + (group.totalDuration * 1000)).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}</div>
                                 <div class="h-[1px] flex-grow bg-slate-300"></div>
-                                <div class="text-[9px] font-black uppercase tracking-widest">AFK ${formatDuration(gap/1000)}</div>
+                                <div class="text-[9px] font-black uppercase tracking-widest">${translations['idle_away'] || 'AFK'} ${formatDuration(gap/1000)}</div>
                                 <div class="h-[1px] flex-grow bg-slate-300"></div>
                             </div>`;
                          catStats["Idle / Away"] += gap / 1000;
@@ -1136,7 +1242,7 @@
                             gap.style.width = `${gapWidth}%`;
                             const gStart = new Date(lastEndMs).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
                             const gEnd = new Date(actualStart).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
-                            gap.innerHTML = `<div class="timeline-tooltip"><div class="font-black text-slate-400 uppercase text-[9px]">Idle / AFK</div><div class="text-[9px] mt-1">${gStart} - ${gEnd}</div><div class="font-black mt-1 text-primary">${formatDuration((actualStart - lastEndMs)/1000)}</div></div>`;
+                            gap.innerHTML = `<div class="timeline-tooltip"><div class="font-black text-slate-400 uppercase text-[9px]">${translations['idle_away'] || 'Idle / AFK'}</div><div class="text-[9px] mt-1">${gStart} - ${gEnd}</div><div class="font-black mt-1 text-primary">${formatDuration((actualStart - lastEndMs)/1000)}</div></div>`;
                             container.appendChild(gap);
                             catStats["Idle / Away"] += (actualStart - lastEndMs) / 1000;
                         }
@@ -1163,7 +1269,7 @@
                                 <div class="font-black mb-1 uppercase tracking-widest text-[9px]" style="color: ${color}">${log.Category}</div>
                                 <div class="font-bold text-white text-[10px] mb-1 truncate">${log.ProcessName}</div>
                                 <div class="text-slate-400 text-[9px] truncate mb-2 border-b border-slate-700/50 pb-1">${log.WindowTitle || ''}</div>
-                                <div class="flex justify-between gap-4 text-[9px]"><span class="text-slate-500">Time:</span><span class="text-white">${lStart} - ${lEnd}</span></div>
+                                <div class="flex justify-between gap-4 text-[9px]"><span class="text-slate-500">${translations['time'] || 'Time'}:</span><span class="text-white">${lStart} - ${lEnd}</span></div>
                                 <div class="flex justify-between gap-4 mt-1 font-black" style="color: ${color}"><span>Duration:</span><span>${formatDuration((actualEnd - actualStart)/1000)}</span></div>
                             </div>
                         `;
@@ -1181,7 +1287,7 @@
                         gap.className = 'timeline-segment bg-slate-200/30';
                         gap.style.left = `${lastLeft}%`;
                         gap.style.width = `${finalGapWidth}%`;
-                        gap.innerHTML = `<div class="timeline-tooltip"><div class="font-black text-slate-400 uppercase text-[9px]">Idle / AFK</div></div>`;
+                        gap.innerHTML = `<div class="timeline-tooltip"><div class="font-black text-slate-400 uppercase text-[9px]">${translations['idle_away'] || 'Idle / AFK'}</div></div>`;
                         container.appendChild(gap);
                         catStats["Idle / Away"] += (rangeEndMs - lastEndMs) / 1000;
                     }
@@ -1212,11 +1318,11 @@
             statsContainer.innerHTML = `
                 <div class="col-span-2 md:col-span-4 flex gap-4">
                     <div class="flex-1 bg-white p-3 rounded-lg border border-slate-100">
-                        <div class="text-[9px] font-black uppercase text-slate-400 mb-1">Active</div>
+                        <div class="text-[9px] font-black uppercase text-slate-400 mb-1">${translations['active'] || 'Active'}</div>
                         <div class="text-sm font-black text-slate-700">${formatDuration(activeSec)}</div>
                     </div>
                     <div class="flex-1 bg-white p-3 rounded-lg border border-slate-100">
-                        <div class="text-[9px] font-black uppercase text-slate-400 mb-1">Idle / AFK</div>
+                        <div class="text-[9px] font-black uppercase text-slate-400 mb-1">${translations['idle_away'] || 'Idle / AFK'}</div>
                         <div class="text-sm font-black text-slate-500">${formatDuration(idleSec)}</div>
                     </div>
                 </div>
@@ -1231,7 +1337,7 @@
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
                         <div class="flex items-center gap-2 mb-1">
                             <div class="w-2 h-2 rounded-full" style="background-color: ${color}"></div>
-                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">${name}</span>
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">${name === "Idle / Away" ? (translations['idle_away'] || name) : name}</span>
                         </div>
                         <div class="text-xs font-black text-slate-700">${formatDuration(sec)}</div>
                     </div>
@@ -1241,7 +1347,7 @@
                 legend.innerHTML += `
                     <div class="flex items-center gap-2">
                         <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${color}"></div>
-                        <span class="text-[10px] font-black uppercase text-slate-500 tracking-tighter">${name}</span>
+                        <span class="text-[10px] font-black uppercase text-slate-500 tracking-tighter">${name === "Idle / Away" ? (translations['idle_away'] || name) : name}</span>
                     </div>
                 `;
             });
@@ -1253,6 +1359,8 @@
         function saveSettings() {
             const language = document.getElementById('langInput').value;
             const isRtl = document.getElementById('dirInput').value === 'rtl';
+            const theme = document.getElementById('themeInput').value;
+            const startWithWindows = document.getElementById('startupInput').checked;
             const startOfDay = parseInt(document.getElementById('startOfDayInput').value);
             const startOfWeek = parseInt(document.getElementById('startOfWeekInput').value);
             const blacklist = document.getElementById('blacklistInput').value;
@@ -1261,13 +1369,26 @@
                 interval: 1, 
                 language, 
                 isRtl, 
+                theme,
+                startWithWindows,
                 startOfDay, 
                 startOfWeek,
                 blacklistKeywords: blacklist 
             }));
             loadLanguage(language);
             setDirection(isRtl ? 'rtl' : 'ltr');
+            applyTheme(theme);
             alert(translations['settings_saved'] || 'Saved!');
+        }
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+            } else {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+            }
         }
 
         function saveCategory(cat) {
@@ -1323,6 +1444,8 @@
                 if (data.action === 'settingsData') {
                     document.getElementById('langInput').value = data.language || 'en';
                     document.getElementById('dirInput').value = data.isRtl ? 'rtl' : 'ltr';
+                    document.getElementById('themeInput').value = data.theme || 'light';
+                    document.getElementById('startupInput').checked = !!data.startWithWindows;
                     document.getElementById('startOfDayInput').value = data.startOfDay;
                     document.getElementById('startOfWeekInput').value = data.startOfWeek;
                     document.getElementById('blacklistInput').value = data.blacklistKeywords || '';
@@ -1337,6 +1460,7 @@
                     setFilter(currentFilter);
                     loadLanguage(data.language || 'en');
                     setDirection(data.isRtl ? 'rtl' : 'ltr');
+                    applyTheme(data.theme || 'light');
                 }
                 if (data.action === 'dataResetSuccess') {
                     alert("Database wiped successfully!");
@@ -1393,8 +1517,8 @@
                 <div class="category-row" style="${style}">
                     <span class="material-symbols-outlined text-slate-300 cursor-move">drag_indicator</span>
                     <div class="w-1 h-5 rounded-full" style="background-color: ${cat.Color}"></div>
-                    <input type="text" value="${cat.Name}" onchange="updateCat(${cat.Id}, 'Name', this.value)" class="w-24 p-0 text-[11px] border-none font-bold bg-transparent outline-none" placeholder="Name">
-                    <input type="text" value="${cat.Keywords || ''}" onchange="updateCat(${cat.Id}, 'Keywords', this.value)" class="flex-grow p-1 text-[10px] border-none bg-slate-50/50 rounded font-mono outline-none" placeholder="Regex">
+                    <input type="text" value="${cat.Name}" onchange="updateCat(${cat.Id}, 'Name', this.value)" class="category-input w-32 text-[11px] font-bold outline-none" placeholder="Name">
+                    <input type="text" value="${cat.Keywords || ''}" onchange="updateCat(${cat.Id}, 'Keywords', this.value)" class="category-input flex-grow text-[10px] font-mono outline-none" placeholder="Regex">
                     <input type="color" value="${cat.Color}" onchange="updateCat(${cat.Id}, 'Color', this.value)" class="w-4 h-4 border-0 p-0 cursor-pointer bg-transparent">
                     <button onclick="addNewCategory(${cat.Id})" class="no-drag text-slate-300 hover:text-primary material-symbols-outlined text-[16px]">add_circle</button>
                     <button onclick="deleteCategory(${cat.Id})" class="no-drag text-slate-300 hover:text-error material-symbols-outlined text-[16px]">delete</button>
@@ -1420,23 +1544,41 @@
             if (cat) { cat[field] = value; saveCategory(cat); }
         }
 
-        function groupActivities(logs, limit = 50) {
+        function groupActivities(logs, limit = 50, maxGapSeconds = 0) {
             const sorted = [...logs].sort((a, b) => parseDate(b.Timestamp) - parseDate(a.Timestamp));
             const processed = sorted.slice(0, limit);
             const groups = [];
             let currentGroup = null;
 
-            processed.forEach(log => {
-                if (!currentGroup || currentGroup.category !== log.Category) {
-                    const timestamp = parseDate(log.Timestamp);
+            processed.forEach((log, index) => {
+                const logTime = parseDate(log.Timestamp);
+                const logEndTime = logTime + (log.DurationSeconds * 1000);
+                
+                let shouldStartNew = !currentGroup || currentGroup.category !== log.Category;
+                
+                // When searching or explicitly requested, allow grouping items with small gaps
+                if (maxGapSeconds > 0 && currentGroup && !shouldStartNew) {
+                    const prevLog = processed[index-1];
+                    const prevLogStart = parseDate(prevLog.Timestamp);
+                    const gap = prevLogStart - logEndTime;
+                    if (gap > maxGapSeconds * 1000) {
+                        shouldStartNew = true;
+                    }
+                }
+
+                if (shouldStartNew) {
                     currentGroup = {
-                        id: 'group-' + log.Category.replace(/\s+/g, '-') + '-' + timestamp,
+                        id: 'group-' + (log.Category || 'un').replace(/\s+/g, '-') + '-' + logTime,
                         category: log.Category,
                         logs: [],
                         totalDuration: 0,
-                        startTime: log.Timestamp
+                        startTime: log.Timestamp,
+                        endTime: new Date(logEndTime).toISOString()
                     };
                     groups.push(currentGroup);
+                } else {
+                    // Update startTime since we are processing in reverse chronological order
+                    currentGroup.startTime = log.Timestamp;
                 }
                 currentGroup.logs.push(log);
                 currentGroup.totalDuration += log.DurationSeconds;
@@ -1448,6 +1590,7 @@
             const color = catMap[item.category || item.Category] || '#94a3b8';
             const isGroup = !!item.logs;
             const isExpanded = isGroup && expandedGroupIds.has(item.id);
+            const viewSpecificId = `${mode}-${item.id}`;
             const isTimeline = mode === 'timeline';
 
             let displayTitle = "";
@@ -1455,20 +1598,26 @@
             if (isGroup) {
                 const uniqueTitles = [...new Set(item.logs.map(l => (l.WindowTitle || l.ProcessName).split(' ')[0].replace(/[^\w\u0590-\u05FF]/g, '')))].filter(t => t && t.length > 1);
                 displayTitle = uniqueTitles.slice(0, 3).join(', ') || item.category;
-                timeStr = new Date(parseDate(item.startTime)).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                
+                const startTs = parseDate(item.startTime);
+                const startStr = new Date(startTs).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                
+                if (isTimeline && item.endTime) {
+                    const endTs = parseDate(item.endTime);
+                    const endStr = new Date(endTs).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                    timeStr = `${startStr} - ${endStr}`;
+                } else {
+                    timeStr = startStr;
+                }
             }
 
-            const wrapperClass = isTimeline 
-                ? 'group-wrapper mb-2 border border-slate-100 rounded-xl overflow-hidden shadow-sm hover:border-slate-200 transition-all' 
-                : 'group-wrapper mb-1';
-            const itemClass = isTimeline
-                ? 'p-3 bg-white flex flex-col gap-1 cursor-pointer hover:bg-slate-50 transition-all'
-                : 'py-2.5 flex flex-col gap-1 relative group overflow-hidden cursor-pointer hover:bg-slate-50/80 transition-all rounded-lg';
-            
+            const wrapperClass = 'group-wrapper mb-1';
+            const itemClass = 'py-2.5 flex flex-col gap-1 relative group overflow-hidden cursor-pointer hover:bg-hover transition-all rounded-lg';
+
             if (isGroup && item.logs.length > 1) {
                 return `
                     <div class="${wrapperClass}">
-                        <div onclick="toggleGroup('${item.id}')" class="${itemClass}">
+                        <div onclick="toggleGroup('${item.id}', '${mode}')" class="${itemClass}">
                             <div class="flex items-center gap-3">
                                 <div class="w-1.5 h-7 rounded-full shrink-0" style="background-color: ${color}"></div>
                                 <div class="flex-grow min-w-0">
@@ -1476,22 +1625,17 @@
                                         <div class="flex items-center gap-2 truncate">
                                             <span class="text-[11px] font-black text-slate-800">${displayTitle}</span>
                                             <span class="text-[8px] px-2 py-0.5 rounded-full font-black uppercase text-white shadow-sm" style="background-color: ${color}">${item.category}</span>
-                                            ${!isTimeline ? `<span class="text-[9px] font-black text-slate-300 uppercase tracking-tighter">${item.logs.length} actions</span>` : ''}
+                                            <span class="text-[9px] font-black text-slate-300 uppercase tracking-tighter">${item.logs.length} ${translations['actions'] || 'actions'}</span>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <span id="icon-${item.id}" class="material-symbols-outlined text-[16px] text-slate-300 transition-transform" style="transform: ${isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}">expand_more</span>
-                                            <span class="text-[9px] font-bold text-slate-400 shrink-0">${timeStr} ${isTimeline ? '' : `• ${formatDuration(item.totalDuration)}`}</span>
+                                            <span id="icon-${viewSpecificId}" class="material-symbols-outlined text-[16px] text-slate-300 transition-transform" style="transform: ${isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}">expand_more</span>
+                                            <span class="text-[9px] font-bold text-slate-400 shrink-0">${timeStr} • ${formatDuration(item.totalDuration)}</span>
                                         </div>
                                     </div>
-                                    ${isTimeline ? `
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-[9px] font-bold text-slate-400 italic">${item.logs.length} sessions</span>
-                                        <span class="text-[10px] font-black text-slate-500">${formatDuration(item.totalDuration)}</span>
-                                    </div>` : ''}
                                 </div>
                             </div>
                         </div>
-                        <div id="${item.id}" class="${isExpanded ? '' : 'hidden'} ${isTimeline ? 'bg-slate-50/30 border-t border-slate-100' : 'ms-4 border-s border-slate-100 ps-4'} flex flex-col">
+                        <div id="${viewSpecificId}" class="${isExpanded ? '' : 'hidden'} ms-4 border-s border-slate-100 ps-4 flex flex-col">
                             ${item.logs.map(log => renderStandaloneRow(log, color, false, mode)).join('')}
                         </div>
                     </div>`;
@@ -1507,26 +1651,22 @@
             const safeTitle = (log.WindowTitle || "").replace(/'/g, "\\'");
             const safeProcess = (log.ProcessName || "").replace(/'/g, "\\'");
             
-            const isTimeline = mode === 'timeline';
-            const itemClass = isTimeline
-                ? `flex flex-col gap-1 p-3 cursor-context-menu hover:bg-slate-50 transition-all ${isStandalone ? 'border border-slate-100 rounded-xl mb-2 shadow-sm' : 'border-t border-slate-100 opacity-90'}`
-                : `py-2.5 flex flex-col gap-1 relative group overflow-hidden cursor-context-menu ${isStandalone ? '' : 'opacity-70 hover:opacity-100 border-b border-slate-50/50'}`;
+            const itemClass = `py-2.5 flex flex-col gap-1 relative group overflow-hidden cursor-context-menu hover:bg-hover transition-all rounded-lg ${isStandalone ? '' : 'opacity-70 hover:opacity-100 border-b border-slate-50/50'}`;
 
             return `
                 <div class="${itemClass}" oncontextmenu="showContextMenu(event, '${safeProcess}', '${safeTitle}')">
                     <div class="flex items-center gap-3">
-                        ${(isStandalone || isTimeline) ? `<div class="w-1 h-6 rounded-full shrink-0" style="background-color: ${color}"></div>` : ''}
+                        ${isStandalone ? `<div class="w-1 h-6 rounded-full shrink-0" style="background-color: ${color}"></div>` : ''}
                         <div class="flex-grow min-w-0">
                             <div class="flex justify-between items-center mb-0.5">
                                 <div class="flex items-center gap-2 truncate">
-                                    <span class="${isTimeline ? 'text-[10px]' : 'text-[11px]'} font-black text-slate-800">${log.ProcessName}</span>
+                                    <span class="text-[11px] font-black text-slate-800">${log.ProcessName}</span>
                                     ${isStandalone ? `<span class="text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase text-white shadow-sm" style="background-color: ${color}">${log.Category}</span>` : ''}
                                 </div>
-                                <span class="text-[9px] font-black text-slate-400 font-mono">${timeStr} ${isTimeline ? '' : `• ${formatDuration(log.DurationSeconds)}`}</span>
+                                <span class="text-[9px] font-black text-slate-400 font-mono">${timeStr} • ${formatDuration(log.DurationSeconds)}</span>
                             </div>
                             <div class="flex justify-between items-center">
-                                <span class="text-[9px] text-slate-400 truncate ${isTimeline ? 'max-w-[80%]' : 'block'} italic leading-tight">${log.WindowTitle || ''}</span>
-                                ${isTimeline ? `<span class="text-[10px] font-black text-slate-500">${formatDuration(log.DurationSeconds)}</span>` : ''}
+                                <span class="text-[9px] text-slate-400 truncate block italic leading-tight">${log.WindowTitle || ''}</span>
                             </div>
                         </div>
                     </div>
@@ -1582,7 +1722,7 @@
                     groups.forEach((group) => {
                         const groupTime = parseDate(group.startTime);
                         if (!separatorShown && groupTime < sessionStartTime) {
-                            logContainer.innerHTML += `<div class="flex items-center gap-3 py-6"><div class="h-[1px] flex-grow bg-slate-200"></div><div class="flex items-center gap-2 px-4 py-1.5 bg-slate-50 rounded-full border border-slate-200 shadow-sm"><span class="material-symbols-outlined text-[12px] text-slate-400">history</span><span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.1em] whitespace-nowrap">Previous Session</span></div><div class="h-[1px] flex-grow bg-slate-200"></div></div>`;
+                            logContainer.innerHTML += `<div class="flex items-center gap-3 py-6"><div class="h-[1px] flex-grow bg-slate-200"></div><div class="flex items-center gap-2 px-4 py-1.5 bg-slate-50 rounded-full border border-slate-200 shadow-sm"><span class="material-symbols-outlined text-[12px] text-slate-400">history</span><span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.1em] whitespace-nowrap">${translations['previous_session'] || 'Previous Session'}</span></div><div class="h-[1px] flex-grow bg-slate-200"></div></div>`;
                             separatorShown = true;
                         }
                         logContainer.innerHTML += renderActivityItem(group, catMap, 'dashboard');
@@ -1683,17 +1823,34 @@
             const now = new Date();
             document.getElementById('digitalClock').innerText = now.toLocaleTimeString('he-IL', { hour12: false });
         }
-        function toggleGroup(groupId) {
-            const el = document.getElementById(groupId);
-            const icon = document.getElementById('icon-' + groupId);
-            if (el.classList.contains('hidden')) {
-                el.classList.remove('hidden');
-                icon.style.transform = 'rotate(180deg)';
-                expandedGroupIds.add(groupId);
-            } else {
-                el.classList.add('hidden');
-                icon.style.transform = 'rotate(0deg)';
+        function toggleGroup(groupId, mode) {
+            const viewSpecificId = mode + '-' + groupId;
+            const el = document.getElementById(viewSpecificId);
+            const icon = document.getElementById('icon-' + viewSpecificId);
+            
+            if (expandedGroupIds.has(groupId)) {
                 expandedGroupIds.delete(groupId);
+                if (el) el.classList.add('hidden');
+                if (icon) icon.style.transform = 'rotate(0deg)';
+            } else {
+                expandedGroupIds.add(groupId);
+                if (el) el.classList.remove('hidden');
+                if (icon) icon.style.transform = 'rotate(180deg)';
+            }
+            
+            // Sync other view if it exists in DOM
+            const otherMode = mode === 'dashboard' ? 'timeline' : 'dashboard';
+            const otherId = otherMode + '-' + groupId;
+            const otherEl = document.getElementById(otherId);
+            const otherIcon = document.getElementById('icon-' + otherId);
+            if (otherEl) {
+                if (expandedGroupIds.has(groupId)) {
+                    otherEl.classList.remove('hidden');
+                    if (otherIcon) otherIcon.style.transform = 'rotate(180deg)';
+                } else {
+                    otherEl.classList.add('hidden');
+                    if (otherIcon) otherIcon.style.transform = 'rotate(0deg)';
+                }
             }
         }
 

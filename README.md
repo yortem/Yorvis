@@ -10,13 +10,20 @@ Built with **.NET 8**, **Photino**, and **SQLite**, Yorvis offers privacy-first,
 
 ### 🕒 Advanced Activity Tracking
 *   **Precision Monitoring**: Samples foreground window data (Process Name & Window Title) every 1 second via Win32 Interop.
-*   **Bounce Protection (New)**: Implements a 5-second buffer for window switches. If you accidentally switch windows or check a notification briefly, Yorvis maintains the continuity of your primary session.
-*   **Heartbeat Commits**: Automatically saves activity logs every 30 seconds to ensure data integrity even in case of system crashes.
+*   **Bounce Protection**: Implements a 5-second buffer for window switches. If you accidentally switch windows or check a notification briefly, Yorvis maintains the continuity of your primary session.
+*   **AFK Detection**: Intelligent idle detection with "Media Awareness"—your movie or music sessions won't be marked as idle.
+*   **Launch on Startup**: Option to automatically start Yorvis when Windows boots, managed directly from the Settings page.
 
 ### 📊 Rich Visualizations
 *   **Timeline Map (Horizontal)**: A pixel-perfect, high-density visualization of your day. Uses absolute time-mapping and glassmorphism tooltips for precise activity review.
-*   **Activity Stream (Vertical)**: A chronological feed of your actions. Automatically groups similar consecutive activities into expandable "sessions" for a cleaner view.
-*   **Interactive Analytics**: Real-time distribution charts and top-category summaries for different time ranges (1h to 30 days).
+*   **Timeline Stream (Vertical)**: A chronological feed unified with the "Recent Logs" design.
+*   **Smart Search Grouping**: When searching in the Timeline Stream, similar activities are intelligently grouped into time ranges (e.g., `10:00 - 10:45`) allowing for small gaps (up to 5 mins).
+*   **Interactive Analytics**: Real-time distribution charts and top-category summaries for different time ranges (Day, Week, Month, or Custom).
+
+### 🎨 Modern UI & Experience
+*   **Dark Theme Support**: Full support for Dark and Light themes with an optimized color palette for reduced eye strain.
+*   **Open Sans Hebrew**: Native high-quality typography for both English and Hebrew text, ensuring maximum readability.
+*   **System Tray Integration**: Runs silently in the background. Close the window to minimize to the tray, and double-click the icon to return to your dashboard.
 
 ### 🛡️ Privacy & Exclusions
 *   **Global Blacklist**: Define custom keywords or Regex patterns to exclude specific windows or processes from ever being recorded.
@@ -24,13 +31,10 @@ Built with **.NET 8**, **Photino**, and **SQLite**, Yorvis offers privacy-first,
 *   **Local-Only Storage**: All data is stored in a local SQLite database (`yorvis.db3`). Your activity never leaves your machine.
 
 ### 🧠 Intelligent Categorization
-*   **Hierarchical Priority**: Drag-and-drop category management. The system matches rules from top to bottom, allowing you to define specific rules that override general ones.
+*   **Hierarchical Priority**: Drag-and-drop category management. The system matches rules from top to bottom, allowing specific rules to override general ones.
+*   **Quick Categorize**: Right-click any activity in the logs to instantly add it to a category via a context menu.
 *   **Regex Support**: Use powerful regular expressions for complex matching logic across titles and processes.
 *   **Retroactive Updates**: Changing a category rule or its priority instantly updates the categorization of all historical logs.
-
-### 🛠️ Maintenance & Maintenance
-*   **Log Retention**: Keep your database lean by deleting logs older than a specific number of days (default 365).
-*   **Health Monitoring**: View real-time database size and record counts directly in the settings.
 
 ---
 
@@ -39,8 +43,7 @@ Built with **.NET 8**, **Photino**, and **SQLite**, Yorvis offers privacy-first,
 ### 💤 AFK (Away From Keyboard) Logic
 Yorvis uses the `GetLastInputInfo` Win32 API to detect inactivity:
 1.  **Threshold**: 180 seconds (3 minutes) of no input triggers AFK status.
-2.  **Media Awareness**: The system detects if you are in a "Media" or "Video" category (e.g., YouTube, Netflix, Spotify). If media is playing, AFK detection is disabled so your movie sessions aren't marked as idle.
-3.  **Correction**: When AFK is detected, the system saves the previous activity but subtracts the 3-minute threshold to ensure the idle time isn't incorrectly attributed to work.
+2.  **Correction**: When AFK is detected, the system saves the previous activity but subtracts the 3-minute threshold to ensure the idle time isn't incorrectly attributed to work.
 
 ### 🔄 Bounce Protection Logic
 To prevent "fragmented logs" from quick window switching:
@@ -48,15 +51,10 @@ To prevent "fragmented logs" from quick window switching:
 - If you switch back to Window A within those 5 seconds, the switch to B is **discarded**.
 - Window A's session continues as if the interruption never happened.
 
-### 🌍 Timezone Handling
-- **Database**: All timestamps are stored in **UTC** to ensure consistency across system reboots and travel.
-- **Frontend**: The dashboard handles local-to-UTC conversion on-the-fly, ensuring that "Last 1 Hour" always correctly aligns with your current system clock.
-
 ### 🌓 RTL & Localization
 - **RTL First**: Full native support for Right-to-Left layouts (Hebrew) and Left-to-Right (English).
-- **Start of Day**: Configurable reset hour (e.g., 4:00 AM) to ensure night-owls see their "today" correctly.
-- **Language**: The interface will be available in English and Hebrew.
-- **Start of Week**: Configurable reset day (e.g., Sunday) to ensure week-based analytics start on the correct day.
+- **Full Translation**: Every UI element, description, and dynamic message is fully localized in both Hebrew and English.
+- **Configurable Periods**: Customizable "Start of Day" hour and "Start of Week" day to align with your personal work schedule.
 
 ---
 
@@ -64,12 +62,17 @@ To prevent "fragmented logs" from quick window switching:
 *   **Core**: .NET 8 (C#)
 *   **UI Engine**: Photino.NET (Native OS Webview - ultra-lightweight)
 *   **Database**: SQLite (via sqlite-net-pcl)
-*   **Styling**: Vanilla CSS with modern Glassmorphism and Tailwind CSS (Dashboard)
-*   **Visuals**: Chart.js for analytics, Material Symbols for icons.
+*   **Styling**: Tailwind CSS & Vanilla CSS with modern Glassmorphism.
+*   **Fonts**: Open Sans (with Hebrew support).
 
 ---
 
 ## 🏃 Setup & Running
 1.  **Requirements**: .NET 8 Runtime.
 2.  **Run**: Execute the published `.exe` or run `dotnet run` in the project directory.
-3.  **Minimize**: Closing the window hides it in the System Tray. Double-click the tray icon to reopen the dashboard.
+
+---
+
+## 👤 Support & Documentation
+Created by **Yortem**.
+For support, feature requests, or to view the source code, visit the [Yorvis GitHub Repository](https://github.com/yortem/Yorvis).

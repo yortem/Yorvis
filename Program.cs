@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows.Forms;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Win32;
 using Photino.NET;
 using Yorvis.Services;
 
@@ -14,6 +15,29 @@ namespace Yorvis
         private static NotifyIcon? _trayIcon;
         private static PhotinoWindow? _mainWindow;
         private static bool _isExiting = false;
+        private static readonly string StartupRegistryKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
+        private static readonly string AppName = "Yorvis";
+
+        private static void SetStartup(bool startWithWindows)
+        {
+            try
+            {
+                using RegistryKey key = Registry.CurrentUser.OpenSubKey(StartupRegistryKey, true)!;
+                if (startWithWindows)
+                {
+                    string appPath = $"\"{System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName}\"";
+                    key.SetValue(AppName, appPath);
+                }
+                else
+                {
+                    key.DeleteValue(AppName, false);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Registry Error: {ex.Message}");
+            }
+        }
 
         [STAThread]
         static void Main(string[] args)
@@ -147,6 +171,8 @@ namespace Yorvis
                         interval = config.IntervalSeconds,
                         language = config.Language,
                         isRtl = config.IsRtl,
+                        theme = config.Theme ?? "light",
+                        startWithWindows = config.StartWithWindows,
                         startOfDay = config.StartOfDayHour,
                         startOfWeek = config.StartOfWeekDay,
                         blacklistKeywords = config.BlacklistKeywords,
@@ -161,10 +187,14 @@ namespace Yorvis
                     int interval = doc.RootElement.GetProperty("interval").GetInt32();
                     string lang = doc.RootElement.GetProperty("language").GetString() ?? "en";
                     bool isRtl = doc.RootElement.GetProperty("isRtl").GetBoolean();
+                    string theme = doc.RootElement.TryGetProperty("theme", out var t) ? t.GetString() ?? "light" : "light";
+                    bool startWithWindows = doc.RootElement.TryGetProperty("startWithWindows", out var sww) && sww.GetBoolean();
                     int startOfDay = doc.RootElement.GetProperty("startOfDay").GetInt32();
                     int startOfWeek = doc.RootElement.GetProperty("startOfWeek").GetInt32();
                     string blacklist = doc.RootElement.TryGetProperty("blacklistKeywords", out var bl) ? bl.GetString() ?? "" : "";
-                    await db.UpdateGlobalConfig(interval, lang, isRtl, startOfDay, startOfWeek, blacklist);
+                    
+                    await db.UpdateGlobalConfig(interval, lang, isRtl, startOfDay, startOfWeek, blacklist, theme, startWithWindows);
+                    SetStartup(startWithWindows);
                 }
                 else if (action == "saveCategory")
                 {
