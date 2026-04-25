@@ -136,14 +136,20 @@ namespace Yorvis
                 else if (action == "getSettings")
                 {
                     var config = await db.GetGlobalConfig();
+                    var dbInfo = await db.GetDatabaseInfo();
+                    
                     var response = new {
                         action = "settingsData",
                         interval = config.IntervalSeconds,
                         language = config.Language,
                         isRtl = config.IsRtl,
                         startOfDay = config.StartOfDayHour,
-                        startOfWeek = config.StartOfWeekDay
+                        startOfWeek = config.StartOfWeekDay,
+                        blacklistKeywords = config.BlacklistKeywords,
+                        dbSize = dbInfo.SizeBytes,
+                        dbRecords = dbInfo.RecordCount
                     };
+                    
                     window.SendWebMessage(JsonSerializer.Serialize(response));
                 }
                 else if (action == "updateSettings")
@@ -153,7 +159,8 @@ namespace Yorvis
                     bool isRtl = doc.RootElement.GetProperty("isRtl").GetBoolean();
                     int startOfDay = doc.RootElement.GetProperty("startOfDay").GetInt32();
                     int startOfWeek = doc.RootElement.GetProperty("startOfWeek").GetInt32();
-                    await db.UpdateGlobalConfig(interval, lang, isRtl, startOfDay, startOfWeek);
+                    string blacklist = doc.RootElement.TryGetProperty("blacklistKeywords", out var bl) ? bl.GetString() ?? "" : "";
+                    await db.UpdateGlobalConfig(interval, lang, isRtl, startOfDay, startOfWeek, blacklist);
                 }
                 else if (action == "saveCategory")
                 {
@@ -185,6 +192,23 @@ namespace Yorvis
                         window.SetMaximized(_isMaximized);
                     }
                     else if (command == "close") window.Close();
+                }
+                else if (action == "resetData")
+                {
+                    await db.ClearActivityLogs();
+                    window.SendWebMessage(JsonSerializer.Serialize(new { action = "dataResetSuccess" }));
+                }
+                else if (action == "cleanupLogs")
+                {
+                    int days = doc.RootElement.GetProperty("days").GetInt32();
+                    int deleted = await db.CleanupLogs(days);
+                    var dbInfo = await db.GetDatabaseInfo();
+                    window.SendWebMessage(JsonSerializer.Serialize(new { 
+                        action = "cleanupSuccess", 
+                        deletedCount = deleted,
+                        dbSize = dbInfo.SizeBytes,
+                        dbRecords = dbInfo.RecordCount
+                    }));
                 }
             } catch (Exception ex) {
                 Console.WriteLine($"Error processing message: {ex.Message}");

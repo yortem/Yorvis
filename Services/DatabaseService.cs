@@ -32,7 +32,8 @@ namespace Yorvis.Services
                     Language = "en", 
                     IsRtl = false,
                     StartOfDayHour = 4,
-                    StartOfWeekDay = 1 // Monday
+                    StartOfWeekDay = 1, // Monday
+                    BlacklistKeywords = "incognito|private browsing"
                 });
 
                 // Top level
@@ -56,21 +57,38 @@ namespace Yorvis.Services
         public async Task<CategoryConfig> GetGlobalConfig()
         {
             var config = await _database.Table<CategoryConfig>().Where(x => x.Name == "_Settings").FirstOrDefaultAsync();
-            return config ?? new CategoryConfig { IntervalSeconds = 1, Language = "en", IsRtl = false, StartOfDayHour = 4, StartOfWeekDay = 1 };
+            return config ?? new CategoryConfig { 
+                Name = "_Settings",
+                IntervalSeconds = 1, 
+                Language = "en", 
+                IsRtl = false, 
+                StartOfDayHour = 4, 
+                StartOfWeekDay = 1,
+                BlacklistKeywords = "incognito|private browsing"
+            };
         }
 
-        public async Task UpdateGlobalConfig(int interval, string lang, bool isRtl, int startOfDay, int startOfWeek)
+        public async Task UpdateGlobalConfig(int interval, string lang, bool isRtl, int startOfDay, int startOfWeek, string blacklistKeywords)
         {
             var config = await _database.Table<CategoryConfig>().Where(x => x.Name == "_Settings").FirstOrDefaultAsync();
-            if (config != null)
+            bool isNew = false;
+            if (config == null)
             {
-                config.IntervalSeconds = interval;
-                config.Language = lang;
-                config.IsRtl = isRtl;
-                config.StartOfDayHour = startOfDay;
-                config.StartOfWeekDay = startOfWeek;
-                await _database.UpdateAsync(config);
+                config = new CategoryConfig { Name = "_Settings" };
+                isNew = true;
             }
+
+            config.IntervalSeconds = interval;
+            config.Language = lang;
+            config.IsRtl = isRtl;
+            config.StartOfDayHour = startOfDay;
+            config.StartOfWeekDay = startOfWeek;
+            config.BlacklistKeywords = blacklistKeywords;
+
+            if (isNew)
+                await _database.InsertAsync(config);
+            else
+                await _database.UpdateAsync(config);
         }
 
         public async Task<int> GetInterval()
@@ -84,9 +102,23 @@ namespace Yorvis.Services
             return _database.Table<ActivityLog>().OrderByDescending(x => x.Timestamp).Take(count).ToListAsync();
         }
 
-        public Task<int> SaveActivity(ActivityLog log)
+        public async Task<int> SaveActivity(ActivityLog log)
         {
-            return _database.InsertAsync(log);
+            // Check if the last log is the same and continuous (within 5 seconds gap)
+            var lastLog = await _database.Table<ActivityLog>().OrderByDescending(x => x.Id).FirstOrDefaultAsync();
+            
+            if (lastLog != null && 
+                lastLog.ProcessName == log.ProcessName && 
+                lastLog.WindowTitle == log.WindowTitle &&
+                (log.Timestamp - lastLog.Timestamp).TotalSeconds <= lastLog.DurationSeconds + 5)
+            {
+                // Update duration: new end time - original start time
+                var newEndTime = log.Timestamp.AddSeconds(log.DurationSeconds);
+                lastLog.DurationSeconds = (newEndTime - lastLog.Timestamp).TotalSeconds;
+                return await _database.UpdateAsync(lastLog);
+            }
+
+            return await _database.InsertAsync(log);
         }
 
         public Task<List<CategoryConfig>> GetCategories()
@@ -116,6 +148,28 @@ namespace Yorvis.Services
                 .Where(x => x.Timestamp >= startUtc && x.Timestamp <= endUtc)
                 .OrderBy(x => x.Timestamp)
                 .ToListAsync();
+        }
+        public async Task<int> ClearActivityLogs()
+        {
+            return await _database.DeleteAllAsync<ActivityLog>();
+        }
+
+        public async Task<int> CleanupLogs(int days)
+        {
+            var cutoff = DateTime.UtcNow.AddDays(-days);
+            return await _database.Table<ActivityLog>().Where(x => x.Timestamp < cutoff).DeleteAsync();
+        }
+
+        public async Task<(long SizeBytes, int RecordCount)> GetDatabaseInfo()
+        {
+            try
+            {
+                var fileInfo = new FileInfo(DbPath);
+                var size = fileInfo.Exists ? fileInfo.Length : 0;
+                var count = await _database.Table<ActivityLog>().CountAsync();
+                return (size, count);
+            }
+            catch { return (0, 0); }
         }
     }
 }

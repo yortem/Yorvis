@@ -157,21 +157,49 @@
             height: 60px;
             background: #f8fafc;
             border-radius: 12px;
-            overflow: hidden;
+            overflow: visible;
             border: 2px solid #f1f5f9;
-            direction: ltr; /* Internal layout for time mapping */
+            direction: ltr;
+            margin-top: 60px; /* Space for tooltips */
+            position: relative;
         }
         .timeline-container.horizontal .timeline-segment {
             height: 100%;
-            position: relative;
+            position: absolute;
+            top: 0;
             cursor: pointer;
-            transition: all 0.2s;
-            border-right: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.15s ease-out;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            min-width: 1px;
         }
         .timeline-container.horizontal .timeline-segment:hover {
-            filter: brightness(1.1);
-            transform: scaleY(1.1);
-            z-index: 10;
+            filter: brightness(1.2);
+            z-index: 50;
+        }
+        .timeline-tooltip {
+            position: absolute;
+            bottom: 140%;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(8px);
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 10px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3), 0 10px 10px -5px rgba(0,0,0,0.2);
+            min-width: 200px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .timeline-segment:hover .timeline-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
         }
         .timeline-card {
             display: flex;
@@ -199,11 +227,13 @@
             display: flex;
             justify-content: center;
             flex-shrink: 0;
+            margin-left: 10px;
+            margin-right: 10px;
         }
         .timeline-dot {
             width: 10px;
             height: 10px;
-            border-radius: full;
+            border-radius: 999px;
             border: 2px solid white;
             position: absolute;
             top: 14px;
@@ -218,20 +248,22 @@
             border: 1px solid #f1f5f9;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
             transition: all 0.2s;
+            margin-bottom: 12px;
         }
         .timeline-content:hover {
             border-color: #e2e8f0;
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04);
             transform: translateX(4px);
         }
+
         .timeline-tooltip::after {
             content: '';
             position: absolute;
             top: 100%;
             left: 50%;
             transform: translateX(-50%);
-            border: 5px solid transparent;
-            border-top-color: #1e293b;
+            border: 6px solid transparent;
+            border-top-color: rgba(15, 23, 42, 0.95);
         }
 
         /* Custom Context Menu */
@@ -270,6 +302,33 @@
             align-items: center;
             justify-content: center;
         }
+        /* Sub-tabs for Settings */
+        .sub-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 8px;
+        }
+        .sub-nav-btn {
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .sub-nav-btn.active {
+            background: #3525cd;
+            color: white;
+            box-shadow: 0 4px 10px rgba(53, 37, 205, 0.2);
+        }
+        .sub-view { display: none; }
+        .sub-view.active { display: block; animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body class="font-body-md text-on-surface bg-background antialiased">
@@ -455,41 +514,88 @@
 
         <!-- Settings View -->
         <div id="settings" class="view">
-            <h2 class="text-sm font-black text-slate-700 mb-4 uppercase tracking-tight">Settings</h2>
-            <div class="flex flex-col gap-1 w-full">
-                <div class="setting-row">
-                    <span class="text-xs font-bold text-slate-500 w-32 shrink-0">Start of Day</span>
-                    <input type="number" id="startOfDayInput" min="0" max="23" class="w-16 p-1 text-xs border rounded bg-slate-50 outline-none">
-                    <span class="text-[10px] text-slate-400">Hour (0-23) when tracking resets.</span>
+            <h2 class="text-sm font-black text-slate-700 mb-6 uppercase tracking-tight">System Settings</h2>
+            
+            <div class="sub-nav no-drag">
+                <button onclick="showSettingsSubTab('general')" id="btn-sub-general" class="sub-nav-btn active">General</button>
+                <button onclick="showSettingsSubTab('database')" id="btn-sub-database" class="sub-nav-btn">Database</button>
+            </div>
+
+            <div id="settings-general" class="sub-view active">
+                <div class="flex flex-col gap-1 w-full">
+                    <div class="setting-row">
+                        <span class="text-xs font-bold text-slate-500 w-32 shrink-0">Start of Day</span>
+                        <input type="number" id="startOfDayInput" min="0" max="23" class="w-16 p-1 text-xs border rounded bg-slate-50 outline-none">
+                        <span class="text-[10px] text-slate-400">Hour (0-23) when tracking resets.</span>
+                    </div>
+                    <div class="setting-row">
+                        <span class="text-xs font-bold text-slate-500 w-32 shrink-0">Start of Week</span>
+                        <select id="startOfWeekInput" class="w-32 p-1 text-xs border rounded bg-slate-50 outline-none">
+                            <option value="0">Sunday</option>
+                            <option value="1">Monday</option>
+                            <option value="2">Tuesday</option>
+                            <option value="3">Wednesday</option>
+                            <option value="4">Thursday</option>
+                            <option value="5">Friday</option>
+                            <option value="6">Saturday</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <span class="text-xs font-bold text-slate-500 w-32 shrink-0" data-i18n="language">Language</span>
+                        <select id="langInput" class="w-32 p-1 text-xs border rounded bg-slate-50 outline-none">
+                            <option value="en">English</option>
+                            <option value="he">Hebrew</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <span class="text-xs font-bold text-slate-500 w-32 shrink-0">Layout</span>
+                        <select id="dirInput" class="w-32 p-1 text-xs border rounded bg-slate-50 outline-none">
+                            <option value="ltr">LTR (English)</option>
+                            <option value="rtl">RTL (Hebrew)</option>
+                        </select>
+                    </div>
+                    <div class="mt-8 pt-6 border-t border-slate-100">
+                        <h3 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest">Privacy & Exclusions</h3>
+                        <div class="flex flex-col gap-2">
+                            <label class="text-[11px] font-bold text-slate-500">Exclusion Keywords (Blacklist)</label>
+                            <textarea id="blacklistInput" class="w-full h-24 p-3 text-xs border rounded bg-slate-50 outline-none focus:border-primary font-mono" placeholder="incognito|private|secret..."></textarea>
+                            <p class="text-[9px] text-slate-400 italic">Activities matching these keywords (regex) will not be saved to the database. Split with |.</p>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <button onclick="saveSettings()" class="bg-primary text-white px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:translate-y-[-1px] transition-all no-drag">Save All Config</button>
+                    </div>
                 </div>
-                <div class="setting-row">
-                    <span class="text-xs font-bold text-slate-500 w-32 shrink-0">Start of Week</span>
-                    <select id="startOfWeekInput" class="w-32 p-1 text-xs border rounded bg-slate-50 outline-none">
-                        <option value="0">Sunday</option>
-                        <option value="1">Monday</option>
-                        <option value="2">Tuesday</option>
-                        <option value="3">Wednesday</option>
-                        <option value="4">Thursday</option>
-                        <option value="5">Friday</option>
-                        <option value="6">Saturday</option>
-                    </select>
-                </div>
-                <div class="setting-row">
-                    <span class="text-xs font-bold text-slate-500 w-32 shrink-0" data-i18n="language">Language</span>
-                    <select id="langInput" class="w-32 p-1 text-xs border rounded bg-slate-50 outline-none">
-                        <option value="en">English</option>
-                        <option value="he">Hebrew</option>
-                    </select>
-                </div>
-                <div class="setting-row">
-                    <span class="text-xs font-bold text-slate-500 w-32 shrink-0">Layout</span>
-                    <select id="dirInput" class="w-32 p-1 text-xs border rounded bg-slate-50 outline-none">
-                        <option value="ltr">LTR (English)</option>
-                        <option value="rtl">RTL (Hebrew)</option>
-                    </select>
-                </div>
-                <div class="mt-4">
-                    <button onclick="saveSettings()" class="bg-primary text-white px-8 py-2 rounded text-[10px] font-black uppercase tracking-widest shadow-md hover:translate-y-[-1px] transition-all no-drag">Save All Config</button>
+            </div>
+
+            <div id="settings-database" class="sub-view">
+                <div class="flex flex-col gap-6">
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                            <span class="text-xs font-bold text-slate-500">Database Size</span>
+                            <span id="dbSizeText" class="text-xs font-black text-slate-700">0.00 MB</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                            <span class="text-xs font-bold text-slate-500">Total Activity Records</span>
+                            <span id="dbRecordsText" class="text-xs font-black text-slate-700">0 records</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-4">
+                        <div class="bg-slate-50 p-4 rounded-lg">
+                            <h4 class="text-[9px] font-black uppercase text-slate-400 mb-3 tracking-widest">Partial Cleanup</h4>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[11px] text-slate-500">Keep last</span>
+                                <input type="number" id="retentionDaysInput" value="365" class="w-16 p-1 text-xs border rounded bg-white outline-none">
+                                <span class="text-[11px] text-slate-500">days</span>
+                                <button onclick="cleanupLogs()" class="ms-auto bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-3 py-1.5 rounded text-[9px] font-black uppercase tracking-widest transition-all no-drag">Run Cleanup</button>
+                            </div>
+                        </div>
+
+                        <div class="mt-2">
+                            <button onclick="resetData()" class="text-[9px] font-black uppercase text-red-300 hover:text-red-500 transition-colors no-drag">Full Database Reset</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -544,6 +650,7 @@
         let filterStart = null;
         let filterEnd = null;
         let contextData = { process: '', title: '' };
+        let expandedGroupIds = new Set();
 
         async function loadLanguage(lang) {
             // ... (keep existing)
@@ -628,33 +735,39 @@
 
         function getCatForLog(process, title, categories) {
             if (!categories) return "Uncategorized";
+            
+            // 1. User-defined categories (Priority)
             for (const cat of categories) {
                 if (!cat.Keywords) continue;
                 try {
                     const regex = new RegExp(cat.Keywords, 'i');
                     if (regex.test(title || "")) return cat.Name;
-                } catch (e) {
-                    const keywords = (cat.Keywords || "").split('|');
-                    for (const k of keywords) {
-                        if ((title || "").toLowerCase().includes(k.trim().toLowerCase())) return cat.Name;
-                    }
-                }
-            }
-            for (const cat of categories) {
-                if (!cat.Keywords) continue;
-                try {
-                    const regex = new RegExp(cat.Keywords, 'i');
                     if (regex.test(process)) return cat.Name;
                 } catch (e) {
                     const keywords = (cat.Keywords || "").split('|');
                     for (const k of keywords) {
-                        if (process.toLowerCase().includes(k.trim().toLowerCase())) return cat.Name;
+                        const lowK = k.trim().toLowerCase();
+                        if ((title || "").toLowerCase().includes(lowK) || process.toLowerCase().includes(lowK)) return cat.Name;
                     }
                 }
             }
-            const isExplorer = (process || "").toLowerCase().includes("explorer");
-            const isEmptyTitle = !(title || "").trim();
-            if (isExplorer || isEmptyTitle) return "Desktop";
+
+            // 2. System / Shell logic
+            const proc = (process || "").toLowerCase();
+            const tit = (title || "").trim();
+            const isEmpty = !tit;
+
+            if (proc.includes("explorer")) {
+                if (isEmpty || tit === "Program Manager") return "Desktop";
+                return "Files"; // Folder browsing
+            }
+
+            if (proc.includes("searchhost") || proc.includes("shellexperiencehost") || proc.includes("startmenuexperiencehost")) {
+                return "System Shell";
+            }
+
+            if (isEmpty) return "Background / System";
+            
             return "Uncategorized";
         }
 
@@ -663,8 +776,10 @@
             try {
                 if (typeof d === 'string') {
                     let s = d.replace(' ', 'T');
-                    // Force UTC if no timezone info is present
-                    if (!s.includes('Z') && !s.includes('+')) s += 'Z';
+                    // If no timezone/offset is present, assume UTC
+                    if (!s.includes('Z') && !/[+-]\d{2}:\d{2}$/.test(s)) {
+                        s += 'Z';
+                    }
                     const t = new Date(s).getTime();
                     return isNaN(t) ? 0 : t;
                 }
@@ -720,10 +835,13 @@
             const btn = document.querySelector(`button[onclick="showView('${viewId}')"]`);
             if(btn) btn.classList.add('active');
             
-            if (viewId === 'settings') window.external.sendMessage(JSON.stringify({ action: 'getSettings' }));
+            if (viewId === 'settings') {
+                window.external.sendMessage(JSON.stringify({ action: 'getSettings' }));
+                showSettingsSubTab('general');
+            }
             
             if (viewId === 'dashboard') {
-                if(!refreshInterval) refreshInterval = setInterval(refreshData, 5000);
+                if(!refreshInterval) refreshInterval = setInterval(refreshData, 15000);
                 refreshData();
             } else if (viewId === 'timeline') {
                 clearInterval(refreshInterval);
@@ -736,10 +854,38 @@
             }
         }
 
+        function showSettingsSubTab(tabId) {
+            document.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.sub-nav-btn').forEach(v => v.classList.remove('active'));
+            
+            const target = document.getElementById('settings-' + tabId);
+            const btn = document.getElementById('btn-sub-' + tabId);
+            
+            if(target) target.classList.add('active');
+            if(btn) btn.classList.add('active');
+        }
+
         function windowControl(command) { window.external.sendMessage(JSON.stringify({ action: 'windowControl', command })); }
         
         function refreshData() { 
             if (!filterStart || !filterEnd) return;
+            
+            // If we are in a standard period AND on the dashboard, update the end time to now
+            if (activeViewId === 'dashboard' && (currentFilter === 'day' || currentFilter === 'week' || currentFilter === 'month')) {
+                const now = new Date();
+                filterEnd = new Date(now);
+                
+                // For 'day', also ensure start time is correct in case the day rolled over
+                if (currentFilter === 'day') {
+                    filterStart = new Date(now);
+                    filterStart.setHours(startOfDayHour, 0, 0, 0);
+                    if (now.getHours() < startOfDayHour) {
+                        filterStart.setDate(filterStart.getDate() - 1);
+                    }
+                }
+                updateDateRangeDisplay();
+            }
+
             const msg = { action: 'getStats' };
             msg.start = filterStart.toISOString();
             msg.end = filterEnd.toISOString();
@@ -867,51 +1013,51 @@
             statsContainer.innerHTML = '';
             container.className = `timeline-container ${timelineMode}`;
 
-            if (!logs || logs.length === 0) {
-                container.innerHTML = `
-                    <div class="w-full h-full flex flex-col items-center justify-center gap-2 py-8">
-                        <div class="text-[10px] font-black text-slate-300 uppercase tracking-widest">No Activity Tracked in this range</div>
-                    </div>`;
-                statsContainer.innerHTML = '<div class="col-span-full text-center text-[10px] text-slate-400 font-bold uppercase">No data found in current range</div>';
-                return;
-            }
-
             const catMap = {};
-            const catStats = {};
+            const catStats = { "Idle / Away": 0 };
             categories.forEach(c => {
                 catMap[c.Name] = c.Color;
                 catStats[c.Name] = 0;
             });
+
+            if (!logs || logs.length === 0) {
+                container.innerHTML = `
+                    <div class="w-full h-64 flex flex-col items-center justify-center gap-4 text-slate-300">
+                        <span class="material-symbols-outlined text-4xl opacity-20">history</span>
+                        <div class="text-[10px] font-black uppercase tracking-widest">No Activity Tracked in this range</div>
+                    </div>`;
+                return;
+            }
 
             const rangeStartMs = filterStart.getTime();
             const rangeEndMs = filterEnd.getTime();
             const totalRangeMs = rangeEndMs - rangeStartMs;
 
             if (timelineMode === 'vertical') {
-                const sortedLogs = [...logs].sort((a, b) => parseDate(b.Timestamp) - parseDate(a.Timestamp));
-                sortedLogs.forEach(log => {
-                    const color = catMap[log.Category] || '#94a3b8';
-                    const timeStr = new Date(parseDate(log.Timestamp)).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
-                    catStats[log.Category] = (catStats[log.Category] || 0) + log.DurationSeconds;
+                const groups = groupActivities(logs, 100);
+                let lastLogTime = rangeEndMs;
+
+                groups.forEach((group, idx) => {
+                    const logTime = parseDate(group.startTime);
                     
-                    const card = document.createElement('div');
-                    card.className = 'timeline-card';
-                    card.innerHTML = `
-                        <div class="timeline-time">${timeStr}</div>
-                        <div class="timeline-dot-path"><div class="timeline-dot" style="background-color: ${color}"></div></div>
-                        <div class="timeline-content">
-                            <div class="flex justify-between items-start mb-1">
-                                <span class="text-[9px] font-black uppercase tracking-widest" style="color: ${color}">${log.Category}</span>
-                                <span class="text-[9px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">${formatDuration(log.DurationSeconds)}</span>
-                            </div>
-                            <div class="text-xs font-extrabold text-slate-700">${log.ProcessName}</div>
-                            <div class="text-[10px] text-slate-400 truncate max-w-[500px]">${log.WindowTitle || ''}</div>
-                        </div>
-                    `;
-                    container.appendChild(card);
+                    // Show AFK gap if > 5 minutes
+                    const gap = lastLogTime - (logTime + (group.totalDuration * 1000));
+                    if (gap > 300000 && idx > 0) {
+                         container.innerHTML += `
+                            <div class="flex items-center gap-4 py-4 opacity-30">
+                                <div class="timeline-time">${new Date(logTime + (group.totalDuration * 1000)).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}</div>
+                                <div class="h-[1px] flex-grow bg-slate-300"></div>
+                                <div class="text-[9px] font-black uppercase tracking-widest">AFK ${formatDuration(gap/1000)}</div>
+                                <div class="h-[1px] flex-grow bg-slate-300"></div>
+                            </div>`;
+                         catStats["Idle / Away"] += gap / 1000;
+                    }
+
+                    container.innerHTML += renderActivityItem(group, catMap, 'timeline');
+                    lastLogTime = logTime;
                 });
             } else {
-                // Horizontal Map Mode
+                // Horizontal Map Mode (Absolute Positioning)
                 const sortedLogs = [...logs].sort((a, b) => parseDate(a.Timestamp) - parseDate(b.Timestamp));
                 let lastEndMs = rangeStartMs;
 
@@ -925,73 +1071,73 @@
                     const actualEnd = Math.min(logEndMs, rangeEndMs);
                     catStats[log.Category] = (catStats[log.Category] || 0) + (actualEnd - actualStart) / 1000;
 
+                    // Idle Gap Segment
                     if (actualStart > lastEndMs) {
+                        const gapLeft = ((lastEndMs - rangeStartMs) / totalRangeMs) * 100;
                         const gapWidth = ((actualStart - lastEndMs) / totalRangeMs) * 100;
                         if (gapWidth > 0.1) {
                             const gap = document.createElement('div');
-                            gap.className = 'timeline-segment opacity-20';
+                            gap.className = 'timeline-segment bg-slate-200/20';
+                            gap.style.left = `${gapLeft}%`;
                             gap.style.width = `${gapWidth}%`;
-                            gap.style.backgroundColor = '#f1f5f9';
+                            const gStart = new Date(lastEndMs).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                            const gEnd = new Date(actualStart).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                            gap.innerHTML = `<div class="timeline-tooltip"><div class="font-black text-slate-400 uppercase text-[9px]">Idle / AFK</div><div class="text-[9px] mt-1">${gStart} - ${gEnd}</div><div class="font-black mt-1 text-primary">${formatDuration((actualStart - lastEndMs)/1000)}</div></div>`;
                             container.appendChild(gap);
+                            catStats["Idle / Away"] += (actualStart - lastEndMs) / 1000;
                         }
                     }
 
+                    // Activity Segment
+                    const logLeft = ((actualStart - rangeStartMs) / totalRangeMs) * 100;
                     let logWidth = ((actualEnd - actualStart) / totalRangeMs) * 100;
                     if (logWidth > 0) {
-                        logWidth = Math.max(logWidth, 0.2);
+                        logWidth = Math.max(logWidth, 0.2); // Min visibility
                         const color = catMap[log.Category] || '#94a3b8';
                         const seg = document.createElement('div');
                         seg.className = 'timeline-segment';
+                        seg.style.left = `${logLeft}%`;
                         seg.style.width = `${logWidth}%`;
                         seg.style.backgroundColor = color;
+                        seg.style.zIndex = Math.floor(logWidth * 10); // Wider segments stay "behind" thin ones? Or vice-versa.
                         
-                        const timeStr = new Date(actualStart).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                        const lStart = new Date(actualStart).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                        const lEnd = new Date(actualEnd).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                        
                         seg.innerHTML = `
                             <div class="timeline-tooltip">
-                                <div class="font-black mb-1" style="color: ${color}">${log.Category}</div>
-                                <div class="font-bold text-white">${log.ProcessName}</div>
-                                <div class="text-slate-400 truncate max-w-[200px]">${log.WindowTitle || ''}</div>
-                                <div class="mt-1 pt-1 border-t border-slate-700 text-white">${timeStr} • ${formatDuration(log.DurationSeconds)}</div>
+                                <div class="font-black mb-1 uppercase tracking-widest text-[9px]" style="color: ${color}">${log.Category}</div>
+                                <div class="font-bold text-white text-[10px] mb-1 truncate">${log.ProcessName}</div>
+                                <div class="text-slate-400 text-[9px] truncate mb-2 border-b border-slate-700/50 pb-1">${log.WindowTitle || ''}</div>
+                                <div class="flex justify-between gap-4 text-[9px]"><span class="text-slate-500">Time:</span><span class="text-white">${lStart} - ${lEnd}</span></div>
+                                <div class="flex justify-between gap-4 mt-1 font-black" style="color: ${color}"><span>Duration:</span><span>${formatDuration((actualEnd - actualStart)/1000)}</span></div>
                             </div>
                         `;
                         container.appendChild(seg);
                     }
-                    lastEndMs = actualEnd;
+                    if (actualEnd > lastEndMs) lastEndMs = actualEnd;
                 });
                 
                 // Final gap
                 if (rangeEndMs > lastEndMs) {
+                    const lastLeft = ((lastEndMs - rangeStartMs) / totalRangeMs) * 100;
                     const finalGapWidth = ((rangeEndMs - lastEndMs) / totalRangeMs) * 100;
-                    const finalGap = document.createElement('div');
-                    finalGap.className = 'timeline-segment opacity-20';
-                    finalGap.style.width = `${finalGapWidth}%`;
-                    finalGap.style.backgroundColor = '#f1f5f9';
-                    container.appendChild(finalGap);
-                }
-                
-                // Newest is on right by default in LTR container with oldest first sorted logs.
-                // If user specifically wants RTL logic, we can set direction: rtl on container.
-                // The user said "ימין הוא החדש" (Right is Newest). 
-                // In LTR, x-axis goes from 0 (Left) to 100 (Right). 
-                // So if we sort logs by time ASC, the Newest will be at 100 (Right). Correct.
-            }
-
-            // Final Gap
-            if (rangeEndMs > lastEndMs) {
-                const finalIdleWidth = ((rangeEndMs - lastEndMs) / totalRangeMs) * 100;
-                if (finalIdleWidth > 0.1) {
-                    const finalIdle = document.createElement('div');
-                    finalIdle.className = 'timeline-segment';
-                    finalIdle.style.width = `${finalIdleWidth}%`;
-                    finalIdle.style.backgroundColor = '#f1f5f9';
-                    container.appendChild(finalIdle);
+                    if (finalGapWidth > 0.1) {
+                        const gap = document.createElement('div');
+                        gap.className = 'timeline-segment bg-slate-200/30';
+                        gap.style.left = `${lastLeft}%`;
+                        gap.style.width = `${finalGapWidth}%`;
+                        gap.innerHTML = `<div class="timeline-tooltip"><div class="font-black text-slate-400 uppercase text-[9px]">Idle / AFK</div></div>`;
+                        container.appendChild(gap);
+                        catStats["Idle / Away"] += (rangeEndMs - lastEndMs) / 1000;
+                    }
                 }
             }
 
             // Render Stats & Legend
             Object.entries(catStats).sort((a,b) => b[1] - a[1]).forEach(([name, sec]) => {
                 if (sec <= 0) return;
-                const color = catMap[name] || '#94a3b8';
+                const color = name === "Idle / Away" ? "#e2e8f0" : (catMap[name] || '#94a3b8');
                 
                 // Stats Card
                 statsContainer.innerHTML += `
@@ -1022,7 +1168,16 @@
             const isRtl = document.getElementById('dirInput').value === 'rtl';
             const startOfDay = parseInt(document.getElementById('startOfDayInput').value);
             const startOfWeek = parseInt(document.getElementById('startOfWeekInput').value);
-            window.external.sendMessage(JSON.stringify({ action: 'updateSettings', interval: 1, language, isRtl, startOfDay, startOfWeek }));
+            const blacklist = document.getElementById('blacklistInput').value;
+            window.external.sendMessage(JSON.stringify({ 
+                action: 'updateSettings', 
+                interval: 1, 
+                language, 
+                isRtl, 
+                startOfDay, 
+                startOfWeek,
+                blacklistKeywords: blacklist 
+            }));
             loadLanguage(language);
             setDirection(isRtl ? 'rtl' : 'ltr');
             alert(translations['settings_saved'] || 'Saved!');
@@ -1042,6 +1197,19 @@
                 forceNextRender = true;
                 window.external.sendMessage(JSON.stringify({ action: 'deleteCategory', id: id }));
                 setTimeout(refreshData, 300);
+            }
+        }
+
+        function resetData() {
+            if (confirm("Are you sure you want to PERMANENTLY wipe all activity logs? This cannot be undone.")) {
+                window.external.sendMessage(JSON.stringify({ action: 'resetData' }));
+            }
+        }
+
+        function cleanupLogs() {
+            const days = parseInt(document.getElementById('retentionDaysInput').value) || 365;
+            if (confirm(`Are you sure you want to delete all logs older than ${days} days?`)) {
+                window.external.sendMessage(JSON.stringify({ action: 'cleanupLogs', days: days }));
             }
         }
 
@@ -1070,10 +1238,28 @@
                     document.getElementById('dirInput').value = data.isRtl ? 'rtl' : 'ltr';
                     document.getElementById('startOfDayInput').value = data.startOfDay;
                     document.getElementById('startOfWeekInput').value = data.startOfWeek;
+                    document.getElementById('blacklistInput').value = data.blacklistKeywords || '';
+                    
+                    // DB Info
+                    if (data.dbSize !== undefined) {
+                        document.getElementById('dbSizeText').innerText = (data.dbSize / (1024 * 1024)).toFixed(2) + ' MB';
+                        document.getElementById('dbRecordsText').innerText = data.dbRecords.toLocaleString() + ' records';
+                    }
+
                     startOfDayHour = data.startOfDay;
                     setFilter(currentFilter);
                     loadLanguage(data.language || 'en');
                     setDirection(data.isRtl ? 'rtl' : 'ltr');
+                }
+                if (data.action === 'dataResetSuccess') {
+                    alert("Database wiped successfully!");
+                    refreshData();
+                }
+                if (data.action === 'cleanupSuccess') {
+                    alert(`Cleanup complete! Deleted ${data.deletedCount} old records.`);
+                    document.getElementById('dbSizeText').innerText = (data.dbSize / (1024 * 1024)).toFixed(2) + ' MB';
+                    document.getElementById('dbRecordsText').innerText = data.dbRecords.toLocaleString() + ' records';
+                    refreshData();
                 }
             } catch (e) {
                 console.error("Message Processing Error:", e);
@@ -1147,7 +1333,138 @@
             if (cat) { cat[field] = value; saveCategory(cat); }
         }
 
-        // ... (remaining functions: updateUI, updatePieChart, renderList, formatDuration)
+        function groupActivities(logs, limit = 50) {
+            const sorted = [...logs].sort((a, b) => parseDate(b.Timestamp) - parseDate(a.Timestamp));
+            const processed = sorted.slice(0, limit);
+            const groups = [];
+            let currentGroup = null;
+
+            processed.forEach(log => {
+                if (!currentGroup || currentGroup.category !== log.Category) {
+                    const timestamp = parseDate(log.Timestamp);
+                    currentGroup = {
+                        id: 'group-' + log.Category.replace(/\s+/g, '-') + '-' + timestamp,
+                        category: log.Category,
+                        logs: [],
+                        totalDuration: 0,
+                        startTime: log.Timestamp
+                    };
+                    groups.push(currentGroup);
+                }
+                currentGroup.logs.push(log);
+                currentGroup.totalDuration += log.DurationSeconds;
+            });
+            return groups;
+        }
+
+        function renderActivityItem(item, catMap, mode = 'dashboard') {
+            const color = catMap[item.category || item.Category] || '#94a3b8';
+            const isGroup = !!item.logs;
+            const isExpanded = isGroup && expandedGroupIds.has(item.id);
+            
+            if (isGroup && item.logs.length > 1) {
+                const uniqueTitles = [...new Set(item.logs.map(l => (l.WindowTitle || l.ProcessName).split(' ')[0].replace(/[^\w\u0590-\u05FF]/g, '')))].filter(t => t && t.length > 1);
+                const displayTitle = uniqueTitles.slice(0, 3).join(', ') + (uniqueTitles.length > 3 ? '...' : '');
+                const timeStr = new Date(parseDate(item.startTime)).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                
+                if (mode === 'dashboard') {
+                    return `
+                        <div class="group-wrapper mb-1">
+                            <div onclick="toggleGroup('${item.id}')" class="py-2.5 flex flex-col gap-1 relative group overflow-hidden cursor-pointer hover:bg-slate-50/80 transition-all rounded-lg">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-1 h-6 rounded-full shrink-0" style="background-color: ${color}"></div>
+                                    <div class="flex-grow min-w-0">
+                                        <div class="flex justify-between items-center">
+                                            <div class="flex items-center gap-2 truncate">
+                                                <span class="text-[11px] font-extrabold text-slate-700">${displayTitle || item.category}</span>
+                                                <span class="text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-tighter text-white shadow-sm" style="background-color: ${color}">${item.category}</span>
+                                                <span class="text-[9px] font-black text-slate-300 uppercase tracking-tighter">${item.logs.length} actions</span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span id="icon-${item.id}" class="material-symbols-outlined text-[16px] text-slate-300 transition-transform" style="transform: ${isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}">expand_more</span>
+                                                <span class="text-[9px] font-bold text-slate-400 shrink-0">${timeStr} • ${formatDuration(item.totalDuration)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="${item.id}" class="${isExpanded ? '' : 'hidden'} flex flex-col gap-0 mt-0 ms-4 border-s border-slate-100 ps-4">
+                                ${item.logs.map(log => renderStandaloneRow(log, color, false, mode)).join('')}
+                            </div>
+                        </div>`;
+                } else {
+                    // Timeline Group
+                    return `
+                        <div class="group-wrapper mb-4">
+                            <div onclick="toggleGroup('${item.id}')" class="timeline-card cursor-pointer hover:bg-slate-50/50 rounded-xl transition-all">
+                                <div class="timeline-time">${timeStr}</div>
+                                <div class="timeline-dot-path"><div class="timeline-dot" style="background-color: ${color}"></div></div>
+                                <div class="timeline-content border-dashed border-2">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[9px] font-black uppercase tracking-widest" style="color: ${color}">${item.category}</span>
+                                            <span class="text-[9px] font-black text-slate-300 uppercase tracking-tighter">${item.logs.length} actions</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span id="icon-${item.id}" class="material-symbols-outlined text-[16px] text-slate-300 transition-transform" style="transform: ${isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}">expand_more</span>
+                                            <span class="text-[9px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">${formatDuration(item.totalDuration)}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-xs font-extrabold text-slate-700">${displayTitle || item.category}</div>
+                                </div>
+                            </div>
+                            <div id="${item.id}" class="${isExpanded ? '' : 'hidden'} mt-2 ms-[74px] flex flex-col gap-2 border-s-2 border-slate-100 ps-4">
+                                ${item.logs.map(log => renderStandaloneRow(log, color, false, mode)).join('')}
+                            </div>
+                        </div>`;
+                }
+            } else {
+                const log = isGroup ? item.logs[0] : item;
+                return renderStandaloneRow(log, color, true, mode);
+            }
+        }
+
+        function renderStandaloneRow(log, color, isStandalone, mode) {
+            const logTime = parseDate(log.Timestamp);
+            const timeStr = new Date(logTime).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+            const safeTitle = (log.WindowTitle || "").replace(/'/g, "\\'");
+            const safeProcess = (log.ProcessName || "").replace(/'/g, "\\'");
+            
+            if (mode === 'dashboard') {
+                return `
+                    <div class="py-2.5 flex flex-col gap-1 relative group overflow-hidden cursor-context-menu ${isStandalone ? '' : 'opacity-70 hover:opacity-100 border-b border-slate-50/50'}" oncontextmenu="showContextMenu(event, '${safeProcess}', '${safeTitle}')">
+                        <div class="flex items-center gap-3">
+                            ${isStandalone ? `<div class="w-1 h-6 rounded-full shrink-0" style="background-color: ${color}"></div>` : ''}
+                            <div class="flex-grow min-w-0">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <span class="text-[11px] font-extrabold text-slate-700">${log.ProcessName}</span>
+                                        ${isStandalone ? `<span class="text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-tighter text-white shadow-sm" style="background-color: ${color}">${log.Category}</span>` : ''}
+                                    </div>
+                                    <span class="text-[9px] font-bold text-slate-400 shrink-0">${timeStr} • ${formatDuration(log.DurationSeconds)}</span>
+                                </div>
+                                <span class="text-[9px] text-slate-400 truncate block leading-tight">${log.WindowTitle}</span>
+                            </div>
+                        </div>
+                    </div>`;
+            } else {
+                // Timeline Card
+                return `
+                    <div class="timeline-card cursor-context-menu ${isStandalone ? '' : 'opacity-80 scale-95 origin-left'}" oncontextmenu="showContextMenu(event, '${safeProcess}', '${safeTitle}')">
+                        <div class="timeline-time">${timeStr}</div>
+                        <div class="timeline-dot-path">${isStandalone ? `<div class="timeline-dot" style="background-color: ${color}"></div>` : '<div class="w-1.5 h-1.5 rounded-full bg-slate-200 mt-4"></div>'}</div>
+                        <div class="timeline-content ${isStandalone ? '' : 'py-2'}">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-[9px] font-black uppercase tracking-widest" style="color: ${color}">${log.Category}</span>
+                                <span class="text-[9px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">${formatDuration(log.DurationSeconds)}</span>
+                            </div>
+                            <div class="text-xs font-extrabold text-slate-700">${log.ProcessName}</div>
+                            <div class="text-[10px] text-slate-400 truncate max-w-[500px]">${log.WindowTitle || ''}</div>
+                        </div>
+                    </div>`;
+            }
+        }
+
         function updateUI(logs, categories, current) {
             try {
                 if (!logs || !categories) return;
@@ -1160,80 +1477,50 @@
                 const catMap = {};
                 categories.forEach(c => catMap[c.Name] = c.Color);
 
-            let totalSeconds = logs.reduce((acc, log) => acc + log.DurationSeconds, 0);
-            if (totalSeconds === 0) totalSeconds = 1;
-            document.getElementById('totalTime').innerText = formatDuration(totalSeconds);
+                let totalSeconds = logs.reduce((acc, log) => acc + log.DurationSeconds, 0);
+                if (totalSeconds === 0) totalSeconds = 1;
+                document.getElementById('totalTime').innerText = formatDuration(totalSeconds);
 
-            // Calculate Summaries
-            const catSummary = {};
-            const appSummary = {};
-            const appToCat = {};
-            const titleSummary = {};
-            const titleToCat = {};
+                // Calculate Summaries
+                const catSummary = {};
+                const appSummary = {};
+                const appToCat = {};
+                const titleSummary = {};
+                const titleToCat = {};
 
-            logs.forEach(log => {
-                // Category Summary
-                catSummary[log.Category] = (catSummary[log.Category] || 0) + log.DurationSeconds;
-                
-                // App Summary
-                appSummary[log.ProcessName] = (appSummary[log.ProcessName] || 0) + log.DurationSeconds;
-                appToCat[log.ProcessName] = log.Category;
-
-                // Title Summary
-                if (log.WindowTitle) {
-                    titleSummary[log.WindowTitle] = (titleSummary[log.WindowTitle] || 0) + log.DurationSeconds;
-                    titleToCat[log.WindowTitle] = log.Category;
-                }
-            });
-
-            renderList('categoryList', catSummary, totalSeconds, name => catMap[name] || '#94a3b8');
-            renderList('appList', appSummary, totalSeconds, name => catMap[appToCat[name]] || '#3525cd');
-            renderList('titleList', titleSummary, totalSeconds, name => catMap[titleToCat[name]] || '#712ae2');
-
-            updatePieChart(catSummary, catMap);
-
-            const logContainer = document.getElementById('activityLog');
-            if(logContainer) {
-                logContainer.innerHTML = '';
-                // Sort newest first for Recent Logs
-                const sortedRecent = [...logs].sort((a, b) => parseDate(b.Timestamp) - parseDate(a.Timestamp));
-                const visibleLogs = sortedRecent.slice(0, 15);
-                const maxDuration = Math.max(...visibleLogs.map(l => l.DurationSeconds), 1);
-                
-                visibleLogs.forEach(log => {
-                    const color = catMap[log.Category] || '#94a3b8';
-                    const logTime = parseDate(log.Timestamp);
-                    const timeStr = new Date(logTime).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
-                    const barWidth = (log.DurationSeconds / maxDuration) * 100;
-                    const safeTitle = (log.WindowTitle || "").replace(/'/g, "\\'");
-                    const safeProcess = (log.ProcessName || "").replace(/'/g, "\\'");
-
-                    logContainer.innerHTML += `
-                        <div class="py-2.5 flex flex-col gap-1 relative group overflow-hidden cursor-context-menu" 
-                             oncontextmenu="showContextMenu(event, '${safeProcess}', '${safeTitle}')">
-                            <div class="flex items-center gap-3">
-                                <div class="w-1 h-6 rounded-full shrink-0" style="background-color: ${color}"></div>
-                                <div class="flex-grow min-w-0">
-                                    <div class="flex justify-between items-center">
-                                        <div class="flex items-center gap-2 truncate">
-                                            <span class="text-[11px] font-extrabold text-slate-700">${log.ProcessName}</span>
-                                            <span class="text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-tighter text-white shadow-sm" style="background-color: ${color}">${log.Category}</span>
-                                        </div>
-                                        <span class="text-[9px] font-bold text-slate-400 shrink-0">${timeStr} • ${formatDuration(log.DurationSeconds)}</span>
-                                    </div>
-                                    <span class="text-[9px] text-slate-400 truncate block leading-tight">${log.WindowTitle}</span>
-                                </div>
-                            </div>
-                            <!-- Proportional Duration Bar -->
-                            <div class="absolute bottom-0 left-0 w-full h-[2px] bg-slate-50">
-                                <div class="h-full rounded-full transition-all duration-700 ease-out" 
-                                     style="width: ${barWidth}%; background-color: ${color}; opacity: 0.3">
-                                </div>
-                            </div>
-                        </div>`;
+                logs.forEach(log => {
+                    catSummary[log.Category] = (catSummary[log.Category] || 0) + log.DurationSeconds;
+                    appSummary[log.ProcessName] = (appSummary[log.ProcessName] || 0) + log.DurationSeconds;
+                    appToCat[log.ProcessName] = log.Category;
+                    if (log.WindowTitle) {
+                        titleSummary[log.WindowTitle] = (titleSummary[log.WindowTitle] || 0) + log.DurationSeconds;
+                        titleToCat[log.WindowTitle] = log.Category;
+                    }
                 });
-            }
-            
+
+                renderList('categoryList', catSummary, totalSeconds, name => catMap[name] || '#94a3b8');
+                renderList('appList', appSummary, totalSeconds, name => catMap[appToCat[name]] || '#3525cd');
+                renderList('titleList', titleSummary, totalSeconds, name => catMap[titleToCat[name]] || '#712ae2');
+
+                updatePieChart(catSummary, catMap);
+
+                const logContainer = document.getElementById('activityLog');
+                if(logContainer) {
+                    logContainer.innerHTML = '';
+                    const groups = groupActivities(logs, 50);
+                    const sessionStartTime = filterStart.getTime();
+
+                    let separatorShown = false;
+                    groups.forEach((group) => {
+                        const groupTime = parseDate(group.startTime);
+                        if (!separatorShown && groupTime < sessionStartTime) {
+                            logContainer.innerHTML += `<div class="flex items-center gap-3 py-6"><div class="h-[1px] flex-grow bg-slate-200"></div><div class="flex items-center gap-2 px-4 py-1.5 bg-slate-50 rounded-full border border-slate-200 shadow-sm"><span class="material-symbols-outlined text-[12px] text-slate-400">history</span><span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.1em] whitespace-nowrap">Previous Session</span></div><div class="h-[1px] flex-grow bg-slate-200"></div></div>`;
+                            separatorShown = true;
+                        }
+                        logContainer.innerHTML += renderActivityItem(group, catMap, 'dashboard');
+                    });
+                }
+                
                 if (current) {
                     document.getElementById('currentProcess').innerText = current.process;
                     document.getElementById('currentTitle').innerText = current.title;
@@ -1318,9 +1605,21 @@
             const now = new Date();
             document.getElementById('digitalClock').innerText = now.toLocaleTimeString('he-IL', { hour12: false });
         }
-        setInterval(updateClock, 1000);
-        updateClock();
+        function toggleGroup(groupId) {
+            const el = document.getElementById(groupId);
+            const icon = document.getElementById('icon-' + groupId);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+                expandedGroupIds.add(groupId);
+            } else {
+                el.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+                expandedGroupIds.delete(groupId);
+            }
+        }
 
+        window.external.sendMessage(JSON.stringify({ action: 'getSettings' }));
         setFilter('day');
         showView('dashboard');
         setTimelineMode('vertical');

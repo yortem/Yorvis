@@ -28,5 +28,6 @@ namespace Yorvis.Models
         public int StartOfDayHour { get; set; }
         public int StartOfWeekDay { get; set; }
         public int DisplayOrder { get; set; } 
+        public string? BlacklistKeywords { get; set; }
     }
 }
