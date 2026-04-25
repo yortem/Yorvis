@@ -160,7 +160,6 @@
             overflow: visible;
             border: 2px solid #f1f5f9;
             direction: ltr;
-            margin-top: 60px; /* Space for tooltips */
             position: relative;
         }
         .timeline-container.horizontal .timeline-segment {
@@ -221,24 +220,42 @@
             flex-shrink: 0;
         }
         .timeline-dot-path {
-            width: 2px;
-            background: #f1f5f9;
+            width: 3px;
+            background: linear-gradient(to bottom, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
             position: relative;
             display: flex;
             justify-content: center;
             flex-shrink: 0;
             margin-left: 10px;
             margin-right: 10px;
+            border-radius: 4px;
         }
         .timeline-dot {
-            width: 10px;
-            height: 10px;
+            width: 14px;
+            height: 14px;
             border-radius: 999px;
-            border: 2px solid white;
+            border: 3px solid white;
             position: absolute;
             top: 14px;
             z-index: 2;
-            box-shadow: 0 0 0 4px rgba(241, 245, 249, 0.5);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .timeline-ruler {
+            position: relative;
+            height: 24px;
+            width: 100%;
+            font-size: 10px;
+            font-weight: 900;
+            color: #94a3b8;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 4px;
+        }
+        .timeline-ruler .ruler-mark {
+            position: absolute;
+            bottom: 4px;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            letter-spacing: -0.02em;
         }
         .timeline-content {
             flex-grow: 1;
@@ -334,7 +351,7 @@
 <body class="font-body-md text-on-surface bg-background antialiased">
     <div class="title-bar">
         <div class="flex items-center gap-2 no-drag">
-            <span class="material-symbols-outlined text-[14px] opacity-50">ghost</span>
+            <img src="favicon.ico" class="w-[14px] h-[14px] opacity-80" alt="icon">
             <span class="text-[10px] opacity-50 font-black uppercase tracking-widest" data-i18n="app_title">Yorvis</span>
         </div>
         <div class="window-controls">
@@ -443,37 +460,31 @@
                 <button onclick="setTimelineRange(24)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">24h</button>
                 <button onclick="setTimelineRange(48)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">48h</button>
                 
-                <div class="flex bg-slate-100 p-1 rounded-lg no-drag ms-4">
+                <div class="flex bg-slate-100 p-1 rounded-lg no-drag ms-4 mr-4">
                     <button onclick="setTimelineMode('vertical')" id="mode-vertical" class="px-3 py-1 rounded-md text-[9px] font-black uppercase transition-all">Stream</button>
                     <button onclick="setTimelineMode('horizontal')" id="mode-horizontal" class="px-3 py-1 rounded-md text-[9px] font-black uppercase transition-all">Map</button>
                 </div>
 
                 <button onclick="refreshData()" class="ms-auto flex items-center gap-1 text-[10px] font-black text-primary hover:underline no-drag">
                     <span class="material-symbols-outlined text-[14px]">refresh</span>
-                    REFRESH
                 </button>
             </div>
 
             <div id="timelineDebug" class="text-[9px] font-mono text-slate-400 mb-2 bg-slate-50 p-1 rounded border border-slate-100 hidden"></div>
             
             <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm min-h-[300px] flex flex-col justify-center">
-                <div class="flex justify-between items-end mb-4">
-                    <div>
-                        <h2 class="text-lg font-black text-slate-700 tracking-tight">Daily Flow</h2>
-                        <p id="timelineRangeInfo" class="text-xs text-slate-400 font-bold uppercase"></p>
+                <div id="timelineSearchContainer" class="flex justify-between items-center mb-6">
+                    <div class="relative flex items-center flex-grow max-w-md">
+                        <span class="material-symbols-outlined absolute left-4 text-[18px] text-slate-400">search</span>
+                        <input type="text" id="timelineSearch" placeholder="Search activities in timeline..." oninput="refreshData()" class="bg-slate-50/50 border border-slate-100 rounded-full py-2.5 pl-12 pr-6 text-xs outline-none focus:border-primary/50 focus:bg-white w-full shadow-sm transition-all no-drag">
                     </div>
-                    <div class="flex gap-4">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full bg-primary"></div>
-                            <span class="text-[9px] font-bold text-slate-400 uppercase">Productive</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full bg-slate-200"></div>
-                            <span class="text-[9px] font-bold text-slate-400 uppercase">Idle</span>
-                        </div>
+                    <div class="flex gap-6 items-center">
+                        <p id="timelineRangeInfo" class="text-[9px] text-slate-400 font-black uppercase tracking-tighter"></p>
+                        <div id="timelineLegend" class="flex gap-4"></div>
                     </div>
                 </div>
 
+                <div id="timelineRuler" class="timeline-ruler mb-1 hidden"></div>
                 <div id="timelineContainer" class="timeline-container mb-8">
                     <!-- Timeline segments injected here -->
                 </div>
@@ -993,6 +1004,13 @@
                 activeBtn.classList.remove('text-slate-400');
                 activeBtn.classList.add('bg-white', 'text-primary', 'shadow-sm');
             }
+            
+            const searchContainer = document.getElementById('timelineSearchContainer');
+            if (searchContainer) {
+                if (mode === 'horizontal') searchContainer.classList.add('hidden');
+                else searchContainer.classList.remove('hidden');
+            }
+
             refreshData();
         }
 
@@ -1001,17 +1019,28 @@
             const legend = document.getElementById('timelineLegend');
             const statsContainer = document.getElementById('timelineStats');
             const debug = document.getElementById('timelineDebug');
+            const ruler = document.getElementById('timelineRuler');
             if (!container || !legend || !statsContainer) return;
+
+            const searchQuery = document.getElementById('timelineSearch')?.value.toLowerCase() || "";
+            let filteredLogs = logs || [];
+            if (searchQuery) {
+                filteredLogs = filteredLogs.filter(l => 
+                    l.ProcessName.toLowerCase().includes(searchQuery) || 
+                    (l.WindowTitle || "").toLowerCase().includes(searchQuery)
+                );
+            }
             
             if (debug) {
                 debug.classList.remove('hidden');
-                debug.innerText = `Processing ${logs ? logs.length : 0} logs... View: ${timelineMode}`;
+                debug.innerText = `Processing ${filteredLogs.length} logs... View: ${timelineMode}`;
             }
             
             container.innerHTML = '';
             legend.innerHTML = '';
             statsContainer.innerHTML = '';
             container.className = `timeline-container ${timelineMode}`;
+            if (ruler) ruler.classList.add('hidden');
 
             const catMap = {};
             const catStats = { "Idle / Away": 0 };
@@ -1020,7 +1049,7 @@
                 catStats[c.Name] = 0;
             });
 
-            if (!logs || logs.length === 0) {
+            if (!filteredLogs || filteredLogs.length === 0) {
                 container.innerHTML = `
                     <div class="w-full h-64 flex flex-col items-center justify-center gap-4 text-slate-300">
                         <span class="material-symbols-outlined text-4xl opacity-20">history</span>
@@ -1034,7 +1063,7 @@
             const totalRangeMs = rangeEndMs - rangeStartMs;
 
             if (timelineMode === 'vertical') {
-                const groups = groupActivities(logs, 100);
+                const groups = groupActivities(filteredLogs, 100);
                 let lastLogTime = rangeEndMs;
 
                 groups.forEach((group, idx) => {
@@ -1042,7 +1071,7 @@
                     
                     // Show AFK gap if > 5 minutes
                     const gap = lastLogTime - (logTime + (group.totalDuration * 1000));
-                    if (gap > 300000 && idx > 0) {
+                    if (gap > 300000 && idx > 0 && !searchQuery) { // Don't show gaps when searching
                          container.innerHTML += `
                             <div class="flex items-center gap-4 py-4 opacity-30">
                                 <div class="timeline-time">${new Date(logTime + (group.totalDuration * 1000)).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}</div>
@@ -1130,6 +1159,23 @@
                         gap.innerHTML = `<div class="timeline-tooltip"><div class="font-black text-slate-400 uppercase text-[9px]">Idle / AFK</div></div>`;
                         container.appendChild(gap);
                         catStats["Idle / Away"] += (rangeEndMs - lastEndMs) / 1000;
+                    }
+                }
+
+                // Render Ruler
+                if (ruler) {
+                    ruler.innerHTML = '';
+                    ruler.classList.remove('hidden');
+                    const hourMs = 3600000;
+                    const firstHourStart = Math.ceil(rangeStartMs / hourMs) * hourMs;
+                    for (let t = firstHourStart; t < rangeEndMs; t += hourMs) {
+                        const left = ((t - rangeStartMs) / totalRangeMs) * 100;
+                        if (left < 0 || left > 100) continue;
+                        const mark = document.createElement('div');
+                        mark.className = 'ruler-mark';
+                        mark.style.left = `${left}%`;
+                        mark.innerText = new Date(t).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+                        ruler.appendChild(mark);
                     }
                 }
             }
@@ -1361,63 +1407,53 @@
             const color = catMap[item.category || item.Category] || '#94a3b8';
             const isGroup = !!item.logs;
             const isExpanded = isGroup && expandedGroupIds.has(item.id);
+            const isTimeline = mode === 'timeline';
+
+            let displayTitle = "";
+            let timeStr = "";
+            if (isGroup) {
+                const uniqueTitles = [...new Set(item.logs.map(l => (l.WindowTitle || l.ProcessName).split(' ')[0].replace(/[^\w\u0590-\u05FF]/g, '')))].filter(t => t && t.length > 1);
+                displayTitle = uniqueTitles.slice(0, 3).join(', ') || item.category;
+                timeStr = new Date(parseDate(item.startTime)).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+            }
+
+            const wrapperClass = isTimeline 
+                ? 'group-wrapper mb-2 border border-slate-100 rounded-xl overflow-hidden shadow-sm hover:border-slate-200 transition-all' 
+                : 'group-wrapper mb-1';
+            const itemClass = isTimeline
+                ? 'p-3 bg-white flex flex-col gap-1 cursor-pointer hover:bg-slate-50 transition-all'
+                : 'py-2.5 flex flex-col gap-1 relative group overflow-hidden cursor-pointer hover:bg-slate-50/80 transition-all rounded-lg';
             
             if (isGroup && item.logs.length > 1) {
-                const uniqueTitles = [...new Set(item.logs.map(l => (l.WindowTitle || l.ProcessName).split(' ')[0].replace(/[^\w\u0590-\u05FF]/g, '')))].filter(t => t && t.length > 1);
-                const displayTitle = uniqueTitles.slice(0, 3).join(', ') + (uniqueTitles.length > 3 ? '...' : '');
-                const timeStr = new Date(parseDate(item.startTime)).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
-                
-                if (mode === 'dashboard') {
-                    return `
-                        <div class="group-wrapper mb-1">
-                            <div onclick="toggleGroup('${item.id}')" class="py-2.5 flex flex-col gap-1 relative group overflow-hidden cursor-pointer hover:bg-slate-50/80 transition-all rounded-lg">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-1 h-6 rounded-full shrink-0" style="background-color: ${color}"></div>
-                                    <div class="flex-grow min-w-0">
-                                        <div class="flex justify-between items-center">
-                                            <div class="flex items-center gap-2 truncate">
-                                                <span class="text-[11px] font-extrabold text-slate-700">${displayTitle || item.category}</span>
-                                                <span class="text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-tighter text-white shadow-sm" style="background-color: ${color}">${item.category}</span>
-                                                <span class="text-[9px] font-black text-slate-300 uppercase tracking-tighter">${item.logs.length} actions</span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <span id="icon-${item.id}" class="material-symbols-outlined text-[16px] text-slate-300 transition-transform" style="transform: ${isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}">expand_more</span>
-                                                <span class="text-[9px] font-bold text-slate-400 shrink-0">${timeStr} • ${formatDuration(item.totalDuration)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="${item.id}" class="${isExpanded ? '' : 'hidden'} flex flex-col gap-0 mt-0 ms-4 border-s border-slate-100 ps-4">
-                                ${item.logs.map(log => renderStandaloneRow(log, color, false, mode)).join('')}
-                            </div>
-                        </div>`;
-                } else {
-                    // Timeline Group
-                    return `
-                        <div class="group-wrapper mb-4">
-                            <div onclick="toggleGroup('${item.id}')" class="timeline-card cursor-pointer hover:bg-slate-50/50 rounded-xl transition-all">
-                                <div class="timeline-time">${timeStr}</div>
-                                <div class="timeline-dot-path"><div class="timeline-dot" style="background-color: ${color}"></div></div>
-                                <div class="timeline-content border-dashed border-2">
-                                    <div class="flex justify-between items-center mb-1">
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-[9px] font-black uppercase tracking-widest" style="color: ${color}">${item.category}</span>
-                                            <span class="text-[9px] font-black text-slate-300 uppercase tracking-tighter">${item.logs.length} actions</span>
+                return `
+                    <div class="${wrapperClass}">
+                        <div onclick="toggleGroup('${item.id}')" class="${itemClass}">
+                            <div class="flex items-center gap-3">
+                                <div class="w-1.5 h-7 rounded-full shrink-0" style="background-color: ${color}"></div>
+                                <div class="flex-grow min-w-0">
+                                    <div class="flex justify-between items-center mb-0.5">
+                                        <div class="flex items-center gap-2 truncate">
+                                            <span class="text-[11px] font-black text-slate-800">${displayTitle}</span>
+                                            <span class="text-[8px] px-2 py-0.5 rounded-full font-black uppercase text-white shadow-sm" style="background-color: ${color}">${item.category}</span>
+                                            ${!isTimeline ? `<span class="text-[9px] font-black text-slate-300 uppercase tracking-tighter">${item.logs.length} actions</span>` : ''}
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <span id="icon-${item.id}" class="material-symbols-outlined text-[16px] text-slate-300 transition-transform" style="transform: ${isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}">expand_more</span>
-                                            <span class="text-[9px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">${formatDuration(item.totalDuration)}</span>
+                                            <span class="text-[9px] font-bold text-slate-400 shrink-0">${timeStr} ${isTimeline ? '' : `• ${formatDuration(item.totalDuration)}`}</span>
                                         </div>
                                     </div>
-                                    <div class="text-xs font-extrabold text-slate-700">${displayTitle || item.category}</div>
+                                    ${isTimeline ? `
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-[9px] font-bold text-slate-400 italic">${item.logs.length} sessions</span>
+                                        <span class="text-[10px] font-black text-slate-500">${formatDuration(item.totalDuration)}</span>
+                                    </div>` : ''}
                                 </div>
                             </div>
-                            <div id="${item.id}" class="${isExpanded ? '' : 'hidden'} mt-2 ms-[74px] flex flex-col gap-2 border-s-2 border-slate-100 ps-4">
-                                ${item.logs.map(log => renderStandaloneRow(log, color, false, mode)).join('')}
-                            </div>
-                        </div>`;
-                }
+                        </div>
+                        <div id="${item.id}" class="${isExpanded ? '' : 'hidden'} ${isTimeline ? 'bg-slate-50/30 border-t border-slate-100' : 'ms-4 border-s border-slate-100 ps-4'} flex flex-col">
+                            ${item.logs.map(log => renderStandaloneRow(log, color, false, mode)).join('')}
+                        </div>
+                    </div>`;
             } else {
                 const log = isGroup ? item.logs[0] : item;
                 return renderStandaloneRow(log, color, true, mode);
@@ -1430,39 +1466,30 @@
             const safeTitle = (log.WindowTitle || "").replace(/'/g, "\\'");
             const safeProcess = (log.ProcessName || "").replace(/'/g, "\\'");
             
-            if (mode === 'dashboard') {
-                return `
-                    <div class="py-2.5 flex flex-col gap-1 relative group overflow-hidden cursor-context-menu ${isStandalone ? '' : 'opacity-70 hover:opacity-100 border-b border-slate-50/50'}" oncontextmenu="showContextMenu(event, '${safeProcess}', '${safeTitle}')">
-                        <div class="flex items-center gap-3">
-                            ${isStandalone ? `<div class="w-1 h-6 rounded-full shrink-0" style="background-color: ${color}"></div>` : ''}
-                            <div class="flex-grow min-w-0">
-                                <div class="flex justify-between items-center">
-                                    <div class="flex items-center gap-2 truncate">
-                                        <span class="text-[11px] font-extrabold text-slate-700">${log.ProcessName}</span>
-                                        ${isStandalone ? `<span class="text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-tighter text-white shadow-sm" style="background-color: ${color}">${log.Category}</span>` : ''}
-                                    </div>
-                                    <span class="text-[9px] font-bold text-slate-400 shrink-0">${timeStr} • ${formatDuration(log.DurationSeconds)}</span>
+            const isTimeline = mode === 'timeline';
+            const itemClass = isTimeline
+                ? `flex flex-col gap-1 p-3 cursor-context-menu hover:bg-slate-50 transition-all ${isStandalone ? 'border border-slate-100 rounded-xl mb-2 shadow-sm' : 'border-t border-slate-100 opacity-90'}`
+                : `py-2.5 flex flex-col gap-1 relative group overflow-hidden cursor-context-menu ${isStandalone ? '' : 'opacity-70 hover:opacity-100 border-b border-slate-50/50'}`;
+
+            return `
+                <div class="${itemClass}" oncontextmenu="showContextMenu(event, '${safeProcess}', '${safeTitle}')">
+                    <div class="flex items-center gap-3">
+                        ${(isStandalone || isTimeline) ? `<div class="w-1 h-6 rounded-full shrink-0" style="background-color: ${color}"></div>` : ''}
+                        <div class="flex-grow min-w-0">
+                            <div class="flex justify-between items-center mb-0.5">
+                                <div class="flex items-center gap-2 truncate">
+                                    <span class="${isTimeline ? 'text-[10px]' : 'text-[11px]'} font-black text-slate-800">${log.ProcessName}</span>
+                                    ${isStandalone ? `<span class="text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase text-white shadow-sm" style="background-color: ${color}">${log.Category}</span>` : ''}
                                 </div>
-                                <span class="text-[9px] text-slate-400 truncate block leading-tight">${log.WindowTitle}</span>
+                                <span class="text-[9px] font-black text-slate-400 font-mono">${timeStr} ${isTimeline ? '' : `• ${formatDuration(log.DurationSeconds)}`}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-[9px] text-slate-400 truncate ${isTimeline ? 'max-w-[80%]' : 'block'} italic leading-tight">${log.WindowTitle || ''}</span>
+                                ${isTimeline ? `<span class="text-[10px] font-black text-slate-500">${formatDuration(log.DurationSeconds)}</span>` : ''}
                             </div>
                         </div>
-                    </div>`;
-            } else {
-                // Timeline Card
-                return `
-                    <div class="timeline-card cursor-context-menu ${isStandalone ? '' : 'opacity-80 scale-95 origin-left'}" oncontextmenu="showContextMenu(event, '${safeProcess}', '${safeTitle}')">
-                        <div class="timeline-time">${timeStr}</div>
-                        <div class="timeline-dot-path">${isStandalone ? `<div class="timeline-dot" style="background-color: ${color}"></div>` : '<div class="w-1.5 h-1.5 rounded-full bg-slate-200 mt-4"></div>'}</div>
-                        <div class="timeline-content ${isStandalone ? '' : 'py-2'}">
-                            <div class="flex justify-between items-start mb-1">
-                                <span class="text-[9px] font-black uppercase tracking-widest" style="color: ${color}">${log.Category}</span>
-                                <span class="text-[9px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">${formatDuration(log.DurationSeconds)}</span>
-                            </div>
-                            <div class="text-xs font-extrabold text-slate-700">${log.ProcessName}</div>
-                            <div class="text-[10px] text-slate-400 truncate max-w-[500px]">${log.WindowTitle || ''}</div>
-                        </div>
-                    </div>`;
-            }
+                    </div>
+                </div>`;
         }
 
         function updateUI(logs, categories, current) {
@@ -1619,6 +1646,8 @@
             }
         }
 
+        setInterval(updateClock, 1000);
+        updateClock();
         window.external.sendMessage(JSON.stringify({ action: 'getSettings' }));
         setFilter('day');
         showView('dashboard');

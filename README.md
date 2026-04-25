@@ -1,6 +1,6 @@
 # Yorvis: High-Performance PC Activity & Productivity Monitor
 
-Yorvis (Yortem + Jarvis) is a premium, lightweight alternative to ActivityWatch, designed specifically for Windows. It operates as a "Ghost Manager"—monitoring your PC activity silently in the background, providing deep insights through a modern dashboard, and staying out of your way when you're in deep work or gaming.
+Yorvis (Yortem + Jarvis) is a lightweight alternative to ActivityWatch, designed specifically for Windows. It operates as a "Ghost Manager"—monitoring your PC activity silently in the background, providing deep insights through a modern dashboard, and staying out of your way when you're in deep work or gaming.
 
 Built with **.NET 8**, **Photino**, and **SQLite**, Yorvis offers privacy-first, local-only tracking with rich visualizations and intelligent noise reduction.
 
@@ -55,6 +55,8 @@ To prevent "fragmented logs" from quick window switching:
 ### 🌓 RTL & Localization
 - **RTL First**: Full native support for Right-to-Left layouts (Hebrew) and Left-to-Right (English).
 - **Start of Day**: Configurable reset hour (e.g., 4:00 AM) to ensure night-owls see their "today" correctly.
+- **Language**: The interface will be available in English and Hebrew.
+- **Start of Week**: Configurable reset day (e.g., Sunday) to ensure week-based analytics start on the correct day.
 
 ---
 
@@ -71,6 +73,3 @@ To prevent "fragmented logs" from quick window switching:
 1.  **Requirements**: .NET 8 Runtime.
 2.  **Run**: Execute the published `.exe` or run `dotnet run` in the project directory.
 3.  **Minimize**: Closing the window hides it in the System Tray. Double-click the tray icon to reopen the dashboard.
-
----
-*Created by Yortem - Your private Ghost Productivity Manager.*
