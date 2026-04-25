@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <script id="tailwind-config">
@@ -25,13 +26,14 @@
                         "outline-variant": "var(--outline-variant)",
                         "error": "#ba1a1a"
                 },
-                "fontFamily": { "body-md": ["'Open Sans'", "sans-serif"] }
+                "fontFamily": { "body-md": ["var(--font-main)", "sans-serif"] }
               },
             },
           }
     </script>
     <style>
         :root {
+            --font-main: 'Manrope';
             --primary: #3525cd;
             --background: #f8f9ff;
             --surface: #ffffff;
@@ -44,6 +46,10 @@
             --nav-bg: #ffffff;
             --nav-border: #e2e8f0;
             --text-secondary: #64748b;
+        }
+
+        :root[lang="he"] {
+            --font-main: 'Open Sans';
         }
 
         .dark {
@@ -65,7 +71,7 @@
         * { box-sizing: border-box; }
 
         body { 
-            font-family: 'Open Sans', sans-serif;
+            font-family: var(--font-main), sans-serif;
             background-color: var(--background); 
             color: var(--on-surface);
             -webkit-user-select: none; 
