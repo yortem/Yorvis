@@ -19,6 +19,12 @@ namespace Yorvis.Services
         [DllImport("user32.dll")]
         private static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
 
+        [DllImport("user32.dll")]
+        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        public const int SW_HIDE = 0;
+        public const int SW_SHOW = 5;
+
         [StructLayout(LayoutKind.Sequential)]
         private struct LASTINPUTINFO
         {
@@ -52,7 +58,7 @@ namespace Yorvis.Services
             return (process, title);
         }
 
-        private static string GetWindowTitle(IntPtr handle)
+        private static string? GetWindowTitle(IntPtr handle)
         {
             const int nChars = 256;
             StringBuilder buff = new StringBuilder(nChars);
@@ -63,7 +69,7 @@ namespace Yorvis.Services
             return null;
         }
 
-        private static string GetProcessName(IntPtr handle)
+        private static string? GetProcessName(IntPtr handle)
         {
             uint processId;
             GetWindowThreadProcessId(handle, out processId);

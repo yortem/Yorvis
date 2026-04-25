@@ -64,9 +64,9 @@ namespace Yorvis
                 })
                 .RegisterWindowClosingHandler((object sender, EventArgs e) =>
                 {
-                    if (!_isExiting)
+                    if (!_isExiting && _mainWindow != null)
                     {
-                        _mainWindow?.SetMinimized(true);
+                        Win32Interop.ShowWindow(_mainWindow.WindowHandle, Win32Interop.SW_HIDE);
                         return true; // Cancel close
                     }
                     return false; // Allow close
@@ -78,7 +78,11 @@ namespace Yorvis
 
         static void ShowWindow()
         {
-            _mainWindow?.SetMinimized(false);
+            if (_mainWindow != null)
+            {
+                Win32Interop.ShowWindow(_mainWindow.WindowHandle, Win32Interop.SW_SHOW);
+                _mainWindow.SetMinimized(false);
+            }
         }
 
         static void ExitApp(MonitoringService monitor)
