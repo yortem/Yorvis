@@ -22,6 +22,7 @@ namespace Yorvis.Models
         public string? Name { get; set; }
         public string? Keywords { get; set; }
         public string? Color { get; set; }
+        public string? ProductivityType { get; set; } // Productive, Neutral, Leisure
         public int IntervalSeconds { get; set; }
         public string? Language { get; set; }
         public bool IsRtl { get; set; }

@@ -78,5 +78,12 @@
     "friday": "שישי",
     "saturday": "שבת",
     "created_by": "נוצר על ידי",
-    "support_github": "תמיכה ותיעוד ב-GitHub"
+    "support_github": "תמיכה ותיעוד ב-GitHub",
+    "productive": "פרודוקטיבי",
+    "neutral": "ניטרלי",
+    "leisure": "פנאי",
+    "productivity": "פרודוקטיביות",
+    "productivity_score": "ציון פרודוקטיביות",
+    "daily_graph": "גרף יומי",
+    "productivity_tooltip": "נמדד לפי (זמן פרודוקטיבי / (זמן פרודוקטיבי + זמן פנאי)) × 100. זמן ניטרלי אינו נכלל בחישוב."
 }

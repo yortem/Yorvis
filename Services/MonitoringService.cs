@@ -163,7 +163,8 @@ namespace Yorvis.Services
                         if (_lastProcessName.Contains(pattern, StringComparison.OrdinalIgnoreCase) || 
                             _lastWindowTitle.Contains(pattern, StringComparison.OrdinalIgnoreCase))
                         {
-                            return; // Don't save blacklisted activity
+                            category = "Excluded";
+                            break;
                         }
                     }
                 }

@@ -78,5 +78,12 @@
     "friday": "Friday",
     "saturday": "Saturday",
     "created_by": "Created by",
-    "support_github": "Support & Documentation on GitHub"
+    "support_github": "Support & Documentation on GitHub",
+    "productive": "Productive",
+    "neutral": "Neutral",
+    "leisure": "Leisure",
+    "productivity": "Productivity",
+    "productivity_score": "Productivity Score",
+    "daily_graph": "Daily Graph",
+    "productivity_tooltip": "Measured by (Productive Time / (Productive + Leisure Time)) × 100. Neutral time is excluded."
 }

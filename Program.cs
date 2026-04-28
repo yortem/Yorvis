@@ -204,6 +204,7 @@ namespace Yorvis
                         Name = catJson.GetProperty("Name").GetString(),
                         Keywords = catJson.GetProperty("Keywords").GetString(),
                         Color = catJson.GetProperty("Color").GetString(),
+                        ProductivityType = catJson.TryGetProperty("ProductivityType", out var pt) ? pt.GetString() : "Neutral",
                         DisplayOrder = catJson.TryGetProperty("DisplayOrder", out var order) ? order.GetInt32() : 0,
                         ParentId = catJson.TryGetProperty("ParentId", out var pid) && pid.ValueKind != JsonValueKind.Null ? pid.GetInt32() : null
                     };

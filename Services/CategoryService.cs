@@ -34,7 +34,8 @@ namespace Yorvis.Services
                 if (string.IsNullOrWhiteSpace(cat.Keywords)) continue;
                 try
                 {
-                    if (Regex.IsMatch(windowTitle ?? "", cat.Keywords, RegexOptions.IgnoreCase))
+                    var pattern = PreparePattern(cat.Keywords);
+                    if (Regex.IsMatch(windowTitle ?? "", pattern, RegexOptions.IgnoreCase))
                     {
                         return cat.Name ?? "Uncategorized";
                     }
@@ -48,7 +49,8 @@ namespace Yorvis.Services
                 if (string.IsNullOrWhiteSpace(cat.Keywords)) continue;
                 try
                 {
-                    if (Regex.IsMatch(processName, cat.Keywords, RegexOptions.IgnoreCase))
+                    var pattern = PreparePattern(cat.Keywords);
+                    if (Regex.IsMatch(processName, pattern, RegexOptions.IgnoreCase))
                     {
                         return cat.Name ?? "Uncategorized";
                     }
@@ -63,6 +65,33 @@ namespace Yorvis.Services
             if (isExplorer || isEmptyTitle) return "Desktop";
 
             return "Uncategorized";
+        }
+
+        private string PreparePattern(string keywords)
+        {
+            if (string.IsNullOrWhiteSpace(keywords)) return string.Empty;
+
+            // Split by | to support multiple keywords
+            var parts = keywords.Split('|', StringSplitOptions.RemoveEmptyEntries);
+            var escapedParts = parts.Select(p => 
+            {
+                var trimmed = p.Trim();
+                // If it looks like a complex regex (contains *, +, ?, (, [, ^, $), we keep it as is
+                // but we specifically escape '.' if it's not followed by a wildcard or similar
+                // Actually, the simplest and most robust way to fulfill "ensure keywords are escaped if not intended as regex"
+                // is to escape EVERYTHING unless we detect specific intent.
+                // But for this project, let's just escape periods and common non-regex-intent chars.
+                
+                if (trimmed.Contains("*") || trimmed.Contains("+") || trimmed.Contains("?") || 
+                    trimmed.Contains("(") || trimmed.Contains("[") || trimmed.Contains("^") || trimmed.Contains("$"))
+                {
+                    return trimmed; // Keep as regex
+                }
+                
+                return Regex.Escape(trimmed);
+            });
+
+            return string.Join("|", escapedParts);
         }
     }
 }

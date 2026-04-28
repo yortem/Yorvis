@@ -37,20 +37,22 @@ namespace Yorvis.Services
                 });
 
                 // Top level
-                var work = new CategoryConfig { Name = "Work", Keywords = "visual studio|code|terminal|outlook|וורד|אקסל", Color = "#4CAF50" };
+                var work = new CategoryConfig { Name = "Work", Keywords = "visual studio|code|terminal|outlook|וורד|אקסל", Color = "#4CAF50", ProductivityType = "Productive" };
                 await _database.InsertAsync(work);
 
-                var media = new CategoryConfig { Name = "Media", Keywords = "vlc|media player", Color = "#FF9800" };
+                await _database.InsertAsync(new CategoryConfig { ParentId = work.Id, Name = "SEO", Keywords = "ahrefs|semrush|search console|analytics|screaming frog|yoast", Color = "#8BC34A", ProductivityType = "Productive" });
+
+                var media = new CategoryConfig { Name = "Media", Keywords = "vlc|media player", Color = "#FF9800", ProductivityType = "Leisure" };
                 await _database.InsertAsync(media);
 
-                var comms = new CategoryConfig { Name = "Communications", Keywords = "slack|teams|zoom", Color = "#2196F3" };
+                var comms = new CategoryConfig { Name = "Communications", Keywords = "slack|teams|zoom", Color = "#2196F3", ProductivityType = "Neutral" };
                 await _database.InsertAsync(comms);
 
                 // Media sub-categories
-                await _database.InsertAsync(new CategoryConfig { ParentId = media.Id, Name = "Games", Keywords = "gta|steam|epic games", Color = "#f44336" });
-                await _database.InsertAsync(new CategoryConfig { ParentId = media.Id, Name = "Videos", Keywords = "youtube|netflix|prime video", Color = "#e91e63" });
-                await _database.InsertAsync(new CategoryConfig { ParentId = media.Id, Name = "Social Media", Keywords = "facebook|twitter|instagram|reddit|ווטסאפ|טלגרם", Color = "#9c27b0" });
-                await _database.InsertAsync(new CategoryConfig { ParentId = media.Id, Name = "Music", Keywords = "spotify|apple music|itunes", Color = "#673ab7" });
+                await _database.InsertAsync(new CategoryConfig { ParentId = media.Id, Name = "Games", Keywords = "gta|steam|epic games", Color = "#f44336", ProductivityType = "Leisure" });
+                await _database.InsertAsync(new CategoryConfig { ParentId = media.Id, Name = "Videos", Keywords = "youtube|netflix|prime video", Color = "#e91e63", ProductivityType = "Leisure" });
+                await _database.InsertAsync(new CategoryConfig { ParentId = media.Id, Name = "Social Media", Keywords = "facebook|twitter|instagram|reddit|ווטסאפ|טלגרם", Color = "#9c27b0", ProductivityType = "Leisure" });
+                await _database.InsertAsync(new CategoryConfig { ParentId = media.Id, Name = "Music", Keywords = "spotify|apple music|itunes", Color = "#673ab7", ProductivityType = "Leisure" });
             }
         }
 

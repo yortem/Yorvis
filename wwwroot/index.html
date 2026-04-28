@@ -487,11 +487,22 @@
 
                     <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="text-[9px] font-black uppercase tracking-tighter text-slate-400" data-i18n="current_window">Current</span>
-                            <span class="material-symbols-outlined text-secondary text-xs">visibility</span>
+                            <span class="text-[9px] font-black uppercase tracking-tighter text-slate-400" data-i18n="productivity_score">Productivity Score</span>
+                            <span class="material-symbols-outlined text-green-500 text-xs cursor-help group relative" data-i18n-title="productivity_tooltip">
+                                trending_up
+                                <div class="absolute bottom-full right-0 mb-2 w-48 p-2 bg-slate-800 text-white text-[9px] rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 font-medium leading-relaxed shadow-xl border border-slate-700 pointer-events-none">
+                                    <div data-i18n="productivity_tooltip">Measured by (Productive Time / (Productive + Leisure Time)) × 100. Neutral time is excluded.</div>
+                                    <div class="absolute top-full right-2 border-8 border-transparent border-top-slate-800"></div>
+                                </div>
+                            </span>
                         </div>
-                        <span id="currentProcess" class="text-xs font-bold block truncate">---</span>
-                        <span id="currentTitle" class="text-[10px] text-slate-400 truncate block">---</span>
+                        <div class="flex items-end gap-2">
+                            <span id="prodScore" class="text-xl font-black text-slate-800 tracking-tight">--</span>
+                            <span class="text-[10px] font-bold text-slate-400 mb-1">%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-50 rounded-full mt-3 overflow-hidden">
+                            <div id="prodScoreBar" class="h-full bg-green-500 transition-all duration-500" style="width: 0%"></div>
+                        </div>
                     </div>
 
                     <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
@@ -534,53 +545,52 @@
 
         <!-- Timeline View -->
         <div id="timeline" class="view">
-            <div class="flex flex-wrap items-center gap-2 mb-8 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                <span class="text-[10px] font-black text-slate-400 uppercase mr-2 ml-2" data-i18n="range">Range:</span>
-                <button onclick="setTimelineRange(0.25)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">15m</button>
-                <button onclick="setTimelineRange(0.5)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">30m</button>
-                <button onclick="setTimelineRange(1)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-primary text-white shadow-sm">1h</button>
-                <button onclick="setTimelineRange(2)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">2h</button>
-                <button onclick="setTimelineRange(3)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">3h</button>
-                <button onclick="setTimelineRange(4)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">4h</button>
-                <button onclick="setTimelineRange(6)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">6h</button>
-                <button onclick="setTimelineRange(12)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">12h</button>
-                <button onclick="setTimelineRange(24)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">24h</button>
-                <button onclick="setTimelineRange(48)" class="time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100">48h</button>
-                
-                <div class="flex bg-slate-100 p-1 rounded-lg no-drag ms-4 mr-4">
-                    <button onclick="setTimelineMode('vertical')" id="mode-vertical" class="px-3 py-1 rounded-md text-[9px] font-black uppercase transition-all" data-i18n="stream">Stream</button>
-                    <button onclick="setTimelineMode('horizontal')" id="mode-horizontal" class="px-3 py-1 rounded-md text-[9px] font-black uppercase transition-all" data-i18n="map">Map</button>
+            <div class="flex flex-col gap-4 mb-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex bg-slate-100 p-1 rounded-xl no-drag">
+                        <button onclick="setTimelineTab('map')" id="tab-map" class="px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all" data-i18n="map">Map</button>
+                        <button onclick="setTimelineTab('stream')" id="tab-stream" class="px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all" data-i18n="stream">Stream</button>
+                        <button onclick="setTimelineTab('graph')" id="tab-graph" class="px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all" data-i18n="daily_graph">Daily Graph</button>
+                    </div>
+                    <button onclick="refreshData()" class="flex items-center gap-1 text-[10px] font-black text-primary hover:underline no-drag">
+                        <span class="material-symbols-outlined text-[16px]">refresh</span>
+                    </button>
                 </div>
 
-                <button onclick="refreshData()" class="ms-auto flex items-center gap-1 text-[10px] font-black text-primary hover:underline no-drag">
-                    <span class="material-symbols-outlined text-[14px]">refresh</span>
-                </button>
+                <div id="timelineRangeControls" class="flex flex-wrap items-center gap-2 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                    <span class="text-[10px] font-black text-slate-400 uppercase mr-2 ml-2" data-i18n="range">Range:</span>
+                    <div id="rangeButtons" class="flex flex-wrap gap-2">
+                        <!-- Buttons injected or shown based on tab -->
+                    </div>
+                </div>
             </div>
 
             <div id="timelineDebug" class="text-[9px] font-mono text-slate-400 mb-2 bg-slate-50 p-1 rounded border border-slate-100 hidden"></div>
             
-            <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm min-h-[300px] flex flex-col justify-center">
+            <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm min-h-[400px] flex flex-col">
                 <div id="timelineSearchContainer" class="flex justify-between items-center mb-6">
                     <div class="relative flex items-center flex-grow max-w-md group">
-                        <div class="absolute left-0 top-1/2 -translate-y-1/2 right-0 bottom-0 bg-gradient-to-r from-primary/5 to-transparent rounded-full transition-all duration-300 opacity-0 group-focus-within:opacity-100"></div>
-                        <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] text-slate-400 transition-all duration-200 group-focus-within:text-primary group-focus-within:scale-110">search</span>
-                        <input type="text" id="timelineSearch" placeholder="Search activities in timeline..." data-i18n-placeholder="timeline_search_placeholder" oninput="refreshData()" class="relative bg-white border-2 border-slate-100 rounded-full py-2.5 pl-12 pr-6 text-xs font-medium text-slate-600 outline-none focus:border-primary/30 focus:bg-white focus:shadow-lg focus:shadow-primary/10 w-full transition-all duration-200 no-drag">
-                        <button onclick="document.getElementById('timelineSearch').value='';refreshData()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors">
-                            <span class="material-symbols-outlined text-[16px]">close</span>
-                        </button>
+                        <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] text-slate-400">search</span>
+                        <input type="text" id="timelineSearch" placeholder="Search activities..." data-i18n-placeholder="timeline_search_placeholder" oninput="refreshData()" class="bg-white border-2 border-slate-100 rounded-full py-2 pl-12 pr-6 text-xs font-medium text-slate-600 outline-none focus:border-primary/30 w-full transition-all no-drag">
                     </div>
                     <div class="flex gap-6 items-center">
                         <p id="timelineRangeInfo" class="text-[9px] text-slate-400 font-black uppercase tracking-tighter"></p>
-                        <div id="timelineLegend" class="flex gap-4"></div>
                     </div>
                 </div>
 
                 <div id="timelineRuler" class="timeline-ruler mb-1 hidden"></div>
+                
+                <div id="graphView" class="hidden flex-grow flex flex-col">
+                    <div class="h-64 mb-8">
+                        <canvas id="timelineStackedBarChart"></canvas>
+                    </div>
+                </div>
+
                 <div id="timelineContainer" class="timeline-container mb-8">
                     <!-- Timeline segments injected here -->
                 </div>
 
-                <div id="timelineStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                <div id="timelineStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-auto">
                     <!-- Category stats will be injected here -->
                 </div>
 
@@ -769,6 +779,7 @@
         let translations = {};
         let localCategories = [];
         let pieChart = null;
+        let timelineStackedBarChart = null;
         let activeViewId = 'dashboard';
         let refreshInterval = null;
         let forceNextRender = false;
@@ -862,6 +873,27 @@
             return (yiq >= 128) ? '#0b1c30' : 'white';
         }
 
+        function preparePattern(keywords) {
+            if (!keywords) return "";
+            const parts = keywords.split('|');
+            const escapedParts = parts.map(p => {
+                const trimmed = p.trim();
+                if (trimmed.includes('*') || trimmed.includes('+') || trimmed.includes('?') || 
+                    trimmed.includes('(') || trimmed.includes('[') || trimmed.includes('^') || trimmed.includes('$')) {
+                    return trimmed;
+                }
+                // Simple regex escape for JS
+                return trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\|/g, '|'); 
+            });
+            // Wait, the above replace /\\\|/g is wrong if we want to keep | as OR.
+            // Let's redo it properly.
+            return parts.map(p => {
+                const trimmed = p.trim();
+                if (/[*+?^${}()[\]\\]/.test(trimmed)) return trimmed;
+                return trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }).join('|');
+        }
+
         function getCatForLog(process, title, categories) {
             if (!categories) return "Uncategorized";
             
@@ -869,7 +901,8 @@
             for (const cat of categories) {
                 if (!cat.Keywords) continue;
                 try {
-                    const regex = new RegExp(cat.Keywords, 'i');
+                    const pattern = preparePattern(cat.Keywords);
+                    const regex = new RegExp(pattern, 'i');
                     if (regex.test(title || "")) return cat.Name;
                     if (regex.test(process)) return cat.Name;
                 } catch (e) {
@@ -951,11 +984,97 @@
                 const key = el.getAttribute('data-i18n-placeholder');
                 if (translations[key]) el.placeholder = translations[key];
             });
+            document.querySelectorAll('[data-i18n-title]').forEach(el => {
+                const key = el.getAttribute('data-i18n-title');
+                if (translations[key]) el.title = translations[key];
+            });
         }
 
         function setDirection(dir) {
             document.documentElement.dir = dir;
             document.documentElement.lang = currentLang;
+        }
+
+        let currentTimelineTab = 'map';
+
+        function setTimelineTab(tab) {
+            currentTimelineTab = tab;
+            
+            // UI Update
+            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-primary', 'shadow-sm');
+                btn.classList.add('text-slate-400');
+            });
+            document.getElementById(`tab-${tab}`).classList.remove('text-slate-400');
+            document.getElementById(`tab-${tab}`).classList.add('bg-white', 'text-primary', 'shadow-sm');
+
+            const container = document.getElementById('timelineContainer');
+            const graphView = document.getElementById('graphView');
+            const searchContainer = document.getElementById('timelineSearchContainer');
+            const rangeButtons = document.getElementById('rangeButtons');
+
+            // Reset visibility
+            container.classList.add('hidden');
+            graphView.classList.add('hidden');
+            searchContainer.classList.add('hidden');
+            
+            // Set defaults based on tab
+            if (tab === 'map') {
+                timelineMode = 'horizontal';
+                container.classList.remove('hidden');
+                updateRangeButtons([0.5, 1, 2, 3, 4, 6, 12, 24]);
+                setTimelineRange(4);
+            } else if (tab === 'stream') {
+                timelineMode = 'vertical';
+                container.classList.remove('hidden');
+                searchContainer.classList.remove('hidden');
+                updateRangeButtons([1, 2, 4, 6, 12, 24, 48]);
+                setTimelineRange(12);
+            } else if (tab === 'graph') {
+                graphView.classList.remove('hidden');
+                updateRangeButtons([7, 14, 30, 90], 'd');
+                setTimelineRange(7 * 24); // 7 days
+            }
+
+            refreshData();
+        }
+
+        function updateRangeButtons(options, unit = 'h') {
+            const container = document.getElementById('rangeButtons');
+            container.innerHTML = '';
+            options.forEach(val => {
+                const btn = document.createElement('button');
+                btn.className = 'time-range-btn px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 hover:bg-slate-100 transition-all';
+                btn.innerText = val + unit;
+                btn.onclick = () => setTimelineRange(unit === 'd' ? val * 24 : val);
+                container.appendChild(btn);
+            });
+        }
+
+        function setTimelineRange(hours) {
+            const now = new Date();
+            filterEnd = new Date(now);
+            filterStart = new Date(now.getTime() - Math.floor(hours * 60 * 60 * 1000));
+            
+            // UI Update - highlight the button
+            document.querySelectorAll('.time-range-btn').forEach(btn => {
+                const val = parseFloat(btn.innerText);
+                const unit = btn.innerText.includes('d') ? 'd' : 'h';
+                const btnHours = unit === 'd' ? val * 24 : val;
+                
+                if (Math.abs(btnHours - hours) < 0.1) {
+                    btn.classList.remove('bg-slate-50', 'text-slate-500');
+                    btn.classList.add('bg-primary', 'text-white', 'shadow-sm');
+                } else {
+                    btn.classList.add('bg-slate-50', 'text-slate-500');
+                    btn.classList.remove('bg-primary', 'text-white', 'shadow-sm');
+                }
+            });
+
+            const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('timelineRangeInfo').innerText = `${filterStart.toLocaleString([], options)} - ${filterEnd.toLocaleString([], options)}`;
+            
+            refreshData();
         }
 
         function showView(viewId) {
@@ -979,7 +1098,7 @@
             } else if (viewId === 'timeline') {
                 clearInterval(refreshInterval);
                 refreshInterval = null;
-                setTimelineRange(4); // Default to 4h when entering timeline
+                setTimelineTab('map');
             } else {
                 clearInterval(refreshInterval);
                 refreshInterval = null;
@@ -1062,8 +1181,12 @@
             if (!filterStart || !filterEnd) return;
             
             // Update the custom inputs
-            document.getElementById('customStart').value = filterStart.toISOString().split('T')[0];
-            document.getElementById('customEnd').value = filterEnd.toISOString().split('T')[0];
+            const startInput = document.getElementById('customStart');
+            const endInput = document.getElementById('customEnd');
+            if (startInput && endInput) {
+                startInput.value = filterStart.toISOString().split('T')[0];
+                endInput.value = filterEnd.toISOString().split('T')[0];
+            }
         }
 
         function applyCustomDates() {
@@ -1090,31 +1213,6 @@
             // Logic for export can be added here
         }
 
-        function setTimelineRange(hours) {
-            const now = new Date();
-            filterEnd = new Date(now);
-            filterStart = new Date(now.getTime() - Math.floor(hours * 60 * 60 * 1000));
-            
-            // UI Update
-            document.querySelectorAll('.time-range-btn').forEach(btn => {
-                btn.classList.remove('bg-primary', 'text-white', 'shadow-sm');
-                btn.classList.add('bg-slate-50', 'text-slate-500');
-            });
-            
-            // Highlight the correct button
-            const btns = Array.from(document.querySelectorAll('.time-range-btn'));
-            const targetBtn = btns.find(b => b.innerText.includes(hours >= 1 ? hours + 'h' : (hours*60) + 'm'));
-            if (targetBtn) {
-                targetBtn.classList.remove('bg-slate-50', 'text-slate-500');
-                targetBtn.classList.add('bg-primary', 'text-white', 'shadow-sm');
-            }
-
-            const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            document.getElementById('timelineRangeInfo').innerText = `${filterStart.toLocaleString([], options)} - ${filterEnd.toLocaleString([], options)}`;
-            
-            refreshData();
-        }
-
         function setTimelineMode(mode) {
             timelineMode = mode;
             document.querySelectorAll('[id^="mode-"]').forEach(btn => {
@@ -1134,6 +1232,66 @@
             }
 
             refreshData();
+        }
+
+        function updateStackedBarChart(logs, categories, catMap) {
+            const ctx = document.getElementById('timelineStackedBarChart').getContext('2d');
+            
+            if (!logs || logs.length === 0) {
+                return;
+            }
+
+            // Group logs by day
+            const days = {};
+            logs.forEach(log => {
+                const date = new Date(parseDate(log.Timestamp)).toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
+                if (!days[date]) days[date] = {};
+                days[date][log.Category] = (days[date][log.Category] || 0) + log.DurationSeconds;
+            });
+
+            const labels = Object.keys(days).sort((a,b) => new Date(a) - new Date(b));
+            const categoryNames = categories.map(c => c.Name);
+            
+            const datasets = categoryNames.map(catName => {
+                return {
+                    label: catName,
+                    data: labels.map(day => (days[day][catName] || 0) / 3600), // in hours
+                    backgroundColor: catMap[catName] || '#94a3b8',
+                    stack: 'Stack 0',
+                    borderRadius: 4
+                };
+            });
+
+            if (timelineStackedBarChart) {
+                timelineStackedBarChart.data.labels = labels;
+                timelineStackedBarChart.data.datasets = datasets;
+                timelineStackedBarChart.update();
+            } else {
+                timelineStackedBarChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                                titleFont: { size: 11, weight: 'bold' },
+                                bodyFont: { size: 11 },
+                                padding: 12,
+                                callbacks: {
+                                    label: (ctx) => ` ${ctx.dataset.label}: ${ctx.raw.toFixed(2)}h`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' }, color: '#64748b' } },
+                            y: { stacked: true, beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 }, color: '#94a3b8', callback: (v) => v + 'h' } }
+                        }
+                    }
+                });
+            }
         }
 
         function renderTimeline(logs, categories) {
@@ -1174,6 +1332,13 @@
                 catMap[c.Name] = c.Color;
                 catStats[c.Name] = 0;
             });
+
+            // Update Stacked Bar Chart if we are in graph tab
+            if (currentTimelineTab === 'graph') {
+                updateStackedBarChart(logs, categories, catMap);
+            }
+
+            if (currentTimelineTab === 'graph') return; // Don't render lists/map in graph tab
 
             if (!filteredLogs || filteredLogs.length === 0) {
                 container.innerHTML = `
@@ -1525,6 +1690,11 @@
                     <div class="w-1 h-5 rounded-full" style="background-color: ${cat.Color}"></div>
                     <input type="text" value="${cat.Name}" onchange="updateCat(${cat.Id}, 'Name', this.value)" class="category-input w-32 text-[11px] font-bold outline-none" placeholder="Name">
                     <input type="text" value="${cat.Keywords || ''}" onchange="updateCat(${cat.Id}, 'Keywords', this.value)" class="category-input flex-grow text-[10px] font-mono outline-none" placeholder="Regex">
+                    <select onchange="updateCat(${cat.Id}, 'ProductivityType', this.value)" class="text-[9px] font-black uppercase p-1 rounded border-none bg-slate-50 outline-none">
+                        <option value="Productive" ${cat.ProductivityType === 'Productive' ? 'selected' : ''} data-i18n="productive">Productive</option>
+                        <option value="Neutral" ${cat.ProductivityType === 'Neutral' || !cat.ProductivityType ? 'selected' : ''} data-i18n="neutral">Neutral</option>
+                        <option value="Leisure" ${cat.ProductivityType === 'Leisure' ? 'selected' : ''} data-i18n="leisure">Leisure</option>
+                    </select>
                     <input type="color" value="${cat.Color}" onchange="updateCat(${cat.Id}, 'Color', this.value)" class="w-4 h-4 border-0 p-0 cursor-pointer bg-transparent">
                     <button onclick="addNewCategory(${cat.Id})" class="no-drag text-slate-300 hover:text-primary material-symbols-outlined text-[16px]">add_circle</button>
                     <button onclick="deleteCategory(${cat.Id})" class="no-drag text-slate-300 hover:text-error material-symbols-outlined text-[16px]">delete</button>
@@ -1679,6 +1849,27 @@
                 </div>`;
         }
 
+        function updateProductivityScore(score) {
+            const el = document.getElementById('prodScore');
+            const bar = document.getElementById('prodScoreBar');
+            if (!el || !bar) return;
+            
+            el.innerText = score;
+            bar.style.width = score + '%';
+            
+            // Change color based on score
+            if (score >= 70) {
+                bar.className = 'h-full bg-green-500 transition-all duration-500';
+                el.className = 'text-xl font-black text-green-600 tracking-tight';
+            } else if (score >= 40) {
+                bar.className = 'h-full bg-yellow-500 transition-all duration-500';
+                el.className = 'text-xl font-black text-yellow-600 tracking-tight';
+            } else {
+                bar.className = 'h-full bg-red-500 transition-all duration-500';
+                el.className = 'text-xl font-black text-red-600 tracking-tight';
+            }
+        }
+
         function updateUI(logs, categories, current) {
             try {
                 if (!logs || !categories) return;
@@ -1689,7 +1880,11 @@
                 });
 
                 const catMap = {};
-                categories.forEach(c => catMap[c.Name] = c.Color);
+                const catProdMap = {};
+                categories.forEach(c => {
+                    catMap[c.Name] = c.Color;
+                    catProdMap[c.Name] = c.ProductivityType || "Neutral";
+                });
 
                 let totalSeconds = logs.reduce((acc, log) => acc + log.DurationSeconds, 0);
                 if (totalSeconds === 0) totalSeconds = 1;
@@ -1701,6 +1896,9 @@
                 const appToCat = {};
                 const titleSummary = {};
                 const titleToCat = {};
+                
+                let productiveSeconds = 0;
+                let leisureSeconds = 0;
 
                 logs.forEach(log => {
                     catSummary[log.Category] = (catSummary[log.Category] || 0) + log.DurationSeconds;
@@ -1710,7 +1908,20 @@
                         titleSummary[log.WindowTitle] = (titleSummary[log.WindowTitle] || 0) + log.DurationSeconds;
                         titleToCat[log.WindowTitle] = log.Category;
                     }
+
+                    const prodType = catProdMap[log.Category] || "Neutral";
+                    if (prodType === "Productive") productiveSeconds += log.DurationSeconds;
+                    else if (prodType === "Leisure") leisureSeconds += log.DurationSeconds;
                 });
+
+                // Calculate Productivity Score (0-100)
+                let score = 50;
+                if (productiveSeconds + leisureSeconds > 0) {
+                    score = Math.round((productiveSeconds / (productiveSeconds + leisureSeconds)) * 100);
+                } else if (productiveSeconds > 0) {
+                    score = 100;
+                }
+                updateProductivityScore(score);
 
                 renderList('categoryList', catSummary, totalSeconds, name => catMap[name] || '#94a3b8');
                 renderList('appList', appSummary, totalSeconds, name => catMap[appToCat[name]] || '#3525cd');
@@ -1733,14 +1944,6 @@
                         }
                         logContainer.innerHTML += renderActivityItem(group, catMap, 'dashboard');
                     });
-                }
-                
-                if (current) {
-                    document.getElementById('currentProcess').innerText = current.process;
-                    document.getElementById('currentTitle').innerText = current.title;
-                } else if (logs.length > 0) {
-                    document.getElementById('currentProcess').innerText = logs[0].ProcessName;
-                    document.getElementById('currentTitle').innerText = logs[0].WindowTitle;
                 }
             } catch (e) {
                 console.error("UI Update Error:", e);

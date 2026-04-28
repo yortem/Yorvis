@@ -15,30 +15,36 @@ Built with **.NET 8**, **Photino**, and **SQLite**, Yorvis offers privacy-first,
 *   **Launch on Startup**: Option to automatically start Yorvis when Windows boots, managed directly from the Settings page.
 
 ### 📊 Rich Visualizations
-*   **Timeline Map (Horizontal)**: A pixel-perfect, high-density visualization of your day. Uses absolute time-mapping and glassmorphism tooltips for precise activity review.
-*   **Timeline Stream (Vertical)**: A chronological feed unified with the "Recent Logs" design.
-*   **Smart Search Grouping**: When searching in the Timeline Stream, similar activities are intelligently grouped into time ranges (e.g., `10:00 - 10:45`) allowing for small gaps (up to 5 mins).
+*   **Tabbed Timeline**: A unified interface with three specialized views:
+    *   **Map**: A pixel-perfect, high-density visualization of your day using absolute time-mapping.
+    *   **Stream**: A chronological feed of all activities with smart grouping and search.
+    *   **Daily Graph**: A high-level stacked bar chart showing daily activity totals divided by category.
+*   **Productivity Score**: Real-time 0-100 scoring based on the ratio of productive work vs. leisure time.
 *   **Interactive Analytics**: Real-time distribution charts and top-category summaries for different time ranges (Day, Week, Month, or Custom).
 
 ### 🎨 Modern UI & Experience
+*   **Productivity States**: Define categories as **Productive**, **Neutral**, or **Leisure** to drive intelligent scoring.
 *   **Dark Theme Support**: Full support for Dark and Light themes with an optimized color palette for reduced eye strain.
-*   **Open Sans Hebrew**: Native high-quality typography for both English and Hebrew text, ensuring maximum readability.
-*   **System Tray Integration**: Runs silently in the background. Close the window to minimize to the tray, and double-click the icon to return to your dashboard.
+*   **Open Sans Hebrew**: Native high-quality typography for both English and Hebrew text.
+*   **System Tray Integration**: Runs silently in the background. Close the window to minimize to the tray.
 
 ### 🛡️ Privacy & Exclusions
-*   **Global Blacklist**: Define custom keywords or Regex patterns to exclude specific windows or processes from ever being recorded.
-*   **Incognito Awareness**: Automatically detects and excludes private browsing sessions by default.
-*   **Local-Only Storage**: All data is stored in a local SQLite database (`yorvis.db3`). Your activity never leaves your machine.
+*   **Smart Blacklist**: Define keywords or Regex patterns to exclude specific windows. Excluded items are saved under a dedicated "Excluded" category to preserve timeline continuity without compromising privacy.
+*   **Local-Only Storage**: All data is stored in a local SQLite database (`yorvis.db3`).
 
 ### 🧠 Intelligent Categorization
-*   **Hierarchical Priority**: Drag-and-drop category management. The system matches rules from top to bottom, allowing specific rules to override general ones.
+*   **Hierarchical Priority**: Drag-and-drop category management with top-to-bottom rule matching.
+*   **Auto-Escaping Keywords**: Intelligent logic that automatically escapes special characters (like `.`) unless a complex Regex pattern is detected, preventing common matching errors.
 *   **Quick Categorize**: Right-click any activity in the logs to instantly add it to a category via a context menu.
-*   **Regex Support**: Use powerful regular expressions for complex matching logic across titles and processes.
-*   **Retroactive Updates**: Changing a category rule or its priority instantly updates the categorization of all historical logs.
+*   **Retroactive Updates**: Changing a rule instantly updates all historical log categorizations.
 
 ---
 
 ## 📐 Internal Logic & Calculations
+
+### 📈 Productivity Scoring
+The score is calculated based on clear signals, excluding "Neutral" or "Uncategorized" time:
+`Score = (Productive Time / (Productive Time + Leisure Time)) * 100`
 
 ### 💤 AFK (Away From Keyboard) Logic
 Yorvis uses the `GetLastInputInfo` Win32 API to detect inactivity:
