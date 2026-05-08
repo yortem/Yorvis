@@ -85,5 +85,10 @@
     "productivity": "Productivity",
     "productivity_score": "Productivity Score",
     "daily_graph": "Daily Graph",
-    "productivity_tooltip": "Measured by (Productive Time / (Productive + Leisure Time)) × 100. Neutral time is excluded."
+    "productivity_tooltip": "Measured by (Productive Time / (Productive + Leisure Time)) × 100. Neutral time is excluded.",
+    "export_import": "Data Portability",
+    "export_desc": "Export all categories and activity logs to a JSON file.",
+    "import_desc": "Import data from a Yorvis JSON export file. Existing categories will be merged.",
+    "export_data": "Export Data",
+    "import_data": "Import Data"
 }

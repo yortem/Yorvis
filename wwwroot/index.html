@@ -693,37 +693,66 @@
             </div>
 
             <div id="settings-database" class="sub-view">
-                <div class="flex flex-col gap-6">
-                    <div class="flex flex-col gap-2">
-                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
-                            <span class="text-xs font-bold text-slate-500" data-i18n="database_size">Database Size</span>
-                            <span id="dbSizeText" class="text-xs font-black text-slate-700">0.00 MB</span>
+                <div class="flex flex-col gap-8">
+                    <!-- Stats Overview -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                            <div class="text-[9px] font-black uppercase text-slate-400 mb-1" data-i18n="database_size">Database Size</div>
+                            <div id="dbSizeText" class="text-sm font-black text-slate-700">0.00 MB</div>
                         </div>
-                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
-                            <span class="text-xs font-bold text-slate-500" data-i18n="total_activity_records">Total Activity Records</span>
-                            <span id="dbRecordsText" class="text-xs font-black text-slate-700">0 records</span>
+                        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                            <div class="text-[9px] font-black uppercase text-slate-400 mb-1" data-i18n="total_activity_records">Total Activity Records</div>
+                            <div id="dbRecordsText" class="text-sm font-black text-slate-700">0 records</div>
                         </div>
                     </div>
 
-                    <div class="flex flex-col gap-4">
-                        <div class="bg-slate-50 p-4 rounded-lg">
-                            <h4 class="text-[9px] font-black uppercase text-slate-400 mb-3 tracking-widest" data-i18n="partial_cleanup">Partial Cleanup</h4>
-                            <div class="flex items-center gap-3">
-                                <span class="text-[11px] text-slate-500" data-i18n="keep_last">Keep last</span>
-                                <input type="number" id="retentionDaysInput" value="365" class="w-16 p-1 text-xs border rounded bg-white outline-none">
-                                <span class="text-[11px] text-slate-500" data-i18n="days">days</span>
-                                <button onclick="cleanupLogs()" class="ms-auto bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-3 py-1.5 rounded text-[9px] font-black uppercase tracking-widest transition-all no-drag" data-i18n="run_cleanup">Run Cleanup</button>
+                    <!-- Portability Group -->
+                    <div class="flex flex-col gap-3">
+                        <h4 class="text-[9px] font-black uppercase text-slate-400 tracking-widest px-1" data-i18n="export_import">Data Portability</h4>
+                        <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-[11px] font-bold text-slate-700" data-i18n="export_data">Export Data</div>
+                                    <div class="text-[10px] text-slate-400" data-i18n="export_desc">Export all categories and activity logs to a JSON file.</div>
+                                </div>
+                                <button onclick="exportData()" class="bg-slate-50 border border-slate-200 hover:bg-primary hover:text-white hover:border-primary text-slate-600 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all no-drag">Export</button>
+                            </div>
+                            <div class="border-t border-slate-50 my-1"></div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-[11px] font-bold text-slate-700" data-i18n="import_data">Import Data</div>
+                                    <div class="text-[10px] text-slate-400" data-i18n="import_desc">Import data from a Yorvis JSON export file.</div>
+                                </div>
+                                <button onclick="importData()" class="bg-slate-50 border border-slate-200 hover:bg-primary hover:text-white hover:border-primary text-slate-600 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all no-drag">Import</button>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="mt-2">
-                            <button onclick="resetData()" class="text-[9px] font-black uppercase text-red-300 hover:text-red-500 transition-colors no-drag" data-i18n="full_database_reset">Full Database Reset</button>
+                    <!-- Maintenance Group -->
+                    <div class="flex flex-col gap-3">
+                        <h4 class="text-[9px] font-black uppercase text-slate-400 tracking-widest px-1" data-i18n="maintenance">Maintenance</h4>
+                        <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+                            <div class="flex items-center gap-4">
+                                <div class="flex-grow">
+                                    <div class="text-[11px] font-bold text-slate-700 mb-1" data-i18n="partial_cleanup">Partial Cleanup</div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] text-slate-500" data-i18n="keep_last">Keep last</span>
+                                        <input type="number" id="retentionDaysInput" value="365" class="w-16 p-1.5 text-xs border rounded bg-slate-50 outline-none focus:border-primary">
+                                        <span class="text-[10px] text-slate-500" data-i18n="days">days</span>
+                                    </div>
+                                </div>
+                                <button onclick="cleanupLogs()" class="bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all no-drag" data-i18n="run_cleanup">Run Cleanup</button>
+                            </div>
+                        </div>
+                        <div class="px-2 pt-2">
+                            <button onclick="resetData()" class="text-[10px] font-black uppercase text-red-400 hover:text-red-600 transition-colors no-drag flex items-center gap-2" data-i18n="full_database_reset">
+                                <span class="material-symbols-outlined text-[14px]">delete_forever</span>
+                                Full Database Reset
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Settings Footer -->
+            </div>            <!-- Settings Footer -->
             <div class="mt-auto pt-12 pb-4 text-center">
                 <div class="flex flex-col items-center gap-2">
                     <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-300">
@@ -791,6 +820,7 @@
         let filterEnd = null;
         let contextData = { process: '', title: '' };
         let expandedGroupIds = new Set();
+        let blacklistKeywords = '';
 
         async function loadLanguage(lang) {
             // ... (keep existing)
@@ -876,17 +906,6 @@
         function preparePattern(keywords) {
             if (!keywords) return "";
             const parts = keywords.split('|');
-            const escapedParts = parts.map(p => {
-                const trimmed = p.trim();
-                if (trimmed.includes('*') || trimmed.includes('+') || trimmed.includes('?') || 
-                    trimmed.includes('(') || trimmed.includes('[') || trimmed.includes('^') || trimmed.includes('$')) {
-                    return trimmed;
-                }
-                // Simple regex escape for JS
-                return trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\|/g, '|'); 
-            });
-            // Wait, the above replace /\\\|/g is wrong if we want to keep | as OR.
-            // Let's redo it properly.
             return parts.map(p => {
                 const trimmed = p.trim();
                 if (/[*+?^${}()[\]\\]/.test(trimmed)) return trimmed;
@@ -896,6 +915,21 @@
 
         function getCatForLog(process, title, categories) {
             if (!categories) return "Uncategorized";
+
+            // 0. Blacklist check (Priority)
+            if (blacklistKeywords) {
+                try {
+                    const pattern = preparePattern(blacklistKeywords);
+                    const regex = new RegExp(pattern, 'i');
+                    if (regex.test(title || "") || regex.test(process)) return "Excluded";
+                } catch (e) {
+                    const keywords = (blacklistKeywords || "").split('|');
+                    for (const k of keywords) {
+                        const lowK = k.trim().toLowerCase();
+                        if (lowK && ((title || "").toLowerCase().includes(lowK) || process.toLowerCase().includes(lowK))) return "Excluded";
+                    }
+                }
+            }
             
             // 1. User-defined categories (Priority)
             for (const cat of categories) {
@@ -1294,13 +1328,20 @@
             }
         }
 
-        function renderTimeline(logs, categories) {
+        function renderTimeline(originalLogs, categories) {
             const container = document.getElementById('timelineContainer');
             const legend = document.getElementById('timelineLegend');
             const statsContainer = document.getElementById('timelineStats');
             const debug = document.getElementById('timelineDebug');
             const ruler = document.getElementById('timelineRuler');
             if (!container || !legend || !statsContainer) return;
+
+            // Retroactive categorization
+            originalLogs.forEach(log => { 
+                log.Category = getCatForLog(log.ProcessName, log.WindowTitle, categories); 
+            });
+
+            const logs = originalLogs.filter(l => l.Category !== "Excluded");
 
             const searchQuery = document.getElementById('timelineSearch')?.value.toLowerCase() || "";
             let filteredLogs = logs || [];
@@ -1535,6 +1576,7 @@
             const startOfDay = parseInt(document.getElementById('startOfDayInput').value);
             const startOfWeek = parseInt(document.getElementById('startOfWeekInput').value);
             const blacklist = document.getElementById('blacklistInput').value;
+            blacklistKeywords = blacklist;
             window.external.sendMessage(JSON.stringify({ 
                 action: 'updateSettings', 
                 interval: 1, 
@@ -1592,9 +1634,28 @@
             }
         }
 
+        function exportData() {
+            window.external.sendMessage(JSON.stringify({ action: 'exportData' }));
+        }
+
+        function importData() {
+            window.external.sendMessage(JSON.stringify({ action: 'importData' }));
+        }
+
         window.external.receiveMessage(message => {
             try {
                 const data = JSON.parse(message);
+                if (data.action === 'exportSuccess') {
+                    alert(`Data exported successfully to: ${data.path}`);
+                }
+                if (data.action === 'importSuccess') {
+                    if (data.importedCount >= 0) {
+                        alert(`Import complete! Imported ${data.importedCount} records.`);
+                        refreshData();
+                    } else {
+                        alert("Failed to import data.");
+                    }
+                }
                 if (data.action === 'statsData') {
                     localCategories = data.categories.filter(c => c.Name !== '_Settings');
                     
@@ -1620,6 +1681,7 @@
                     document.getElementById('startOfDayInput').value = data.startOfDay;
                     document.getElementById('startOfWeekInput').value = data.startOfWeek;
                     document.getElementById('blacklistInput').value = data.blacklistKeywords || '';
+                    blacklistKeywords = data.blacklistKeywords || '';
                     
                     // DB Info
                     if (data.dbSize !== undefined) {
@@ -1870,14 +1932,17 @@
             }
         }
 
-        function updateUI(logs, categories, current) {
+        function updateUI(originalLogs, categories, current) {
             try {
-                if (!logs || !categories) return;
+                if (!originalLogs || !categories) return;
                 
                 // Retroactive categorization
-                logs.forEach(log => { 
+                originalLogs.forEach(log => { 
                     log.Category = getCatForLog(log.ProcessName, log.WindowTitle, categories); 
                 });
+
+                // Filter out blacklisted items for the dashboard
+                const logs = originalLogs.filter(l => l.Category !== "Excluded");
 
                 const catMap = {};
                 const catProdMap = {};

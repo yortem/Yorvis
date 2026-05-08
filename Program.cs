@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using Photino.NET;
 using Yorvis.Services;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Yorvis
 {
@@ -238,12 +240,51 @@ namespace Yorvis
                     int days = doc.RootElement.GetProperty("days").GetInt32();
                     int deleted = await db.CleanupLogs(days);
                     var dbInfo = await db.GetDatabaseInfo();
-                    window.SendWebMessage(JsonSerializer.Serialize(new { 
-                        action = "cleanupSuccess", 
+                    window.SendWebMessage(JsonSerializer.Serialize(new
+                    {
+                        action = "cleanupSuccess",
                         deletedCount = deleted,
                         dbSize = dbInfo.SizeBytes,
                         dbRecords = dbInfo.RecordCount
                     }));
+                }
+                else if (action == "exportData")
+                {
+                    var json = await db.ExportData();
+                    var saveDialog = new SaveFileDialog
+                    {
+                        Filter = "JSON files (*.json)|*.json",
+                        FileName = $"yorvis_export_{DateTime.Now:yyyyMMdd_HHmm}.json",
+                        Title = "Export Yorvis Data"
+                    };
+
+                    if (saveDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        File.WriteAllText(saveDialog.FileName, json);
+                        window.SendWebMessage(JsonSerializer.Serialize(new { action = "exportSuccess", path = saveDialog.FileName }));
+                    }
+                }
+                else if (action == "importData")
+                {
+                    var openDialog = new OpenFileDialog
+                    {
+                        Filter = "JSON files (*.json)|*.json",
+                        Title = "Import Yorvis Data"
+                    };
+
+                    if (openDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        var json = File.ReadAllText(openDialog.FileName);
+                        int count = await db.ImportData(json);
+                        var dbInfo = await db.GetDatabaseInfo();
+                        window.SendWebMessage(JsonSerializer.Serialize(new
+                        {
+                            action = "importSuccess",
+                            importedCount = count,
+                            dbSize = dbInfo.SizeBytes,
+                            dbRecords = dbInfo.RecordCount
+                        }));
+                    }
                 }
             } catch (Exception ex) {
                 Console.WriteLine($"Error processing message: {ex.Message}");

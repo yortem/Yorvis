@@ -28,10 +28,26 @@ namespace Yorvis.Services
         {
             if (_categories == null) return "Uncategorized";
 
+            // 0. Blacklist check (Priority)
+            var config = _categories.FirstOrDefault(c => c.Name == "_Settings");
+            if (config != null && !string.IsNullOrWhiteSpace(config.BlacklistKeywords))
+            {
+                try
+                {
+                    var pattern = PreparePattern(config.BlacklistKeywords);
+                    if (Regex.IsMatch(windowTitle ?? "", pattern, RegexOptions.IgnoreCase) ||
+                        Regex.IsMatch(processName ?? "", pattern, RegexOptions.IgnoreCase))
+                    {
+                        return "Excluded";
+                    }
+                }
+                catch { }
+            }
+
             // Pass 1: Check for WindowTitle matches (Higher Priority/Specificity)
             foreach (var cat in _categories)
             {
-                if (string.IsNullOrWhiteSpace(cat.Keywords)) continue;
+                if (string.IsNullOrWhiteSpace(cat.Keywords) || cat.Name == "_Settings") continue;
                 try
                 {
                     var pattern = PreparePattern(cat.Keywords);
@@ -46,7 +62,7 @@ namespace Yorvis.Services
             // Pass 2: Check for ProcessName matches (Lower Priority/Generality)
             foreach (var cat in _categories)
             {
-                if (string.IsNullOrWhiteSpace(cat.Keywords)) continue;
+                if (string.IsNullOrWhiteSpace(cat.Keywords) || cat.Name == "_Settings") continue;
                 try
                 {
                     var pattern = PreparePattern(cat.Keywords);

@@ -148,29 +148,6 @@ namespace Yorvis.Services
 
             var category = _categoryService.GetCategory(_lastProcessName, _lastWindowTitle);
 
-            // Blacklist check
-            try 
-            {
-                var config = await _db.GetGlobalConfig();
-                if (!string.IsNullOrEmpty(config.BlacklistKeywords))
-                {
-                    var patterns = config.BlacklistKeywords.Split('|', StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var p in patterns)
-                    {
-                        var pattern = p.Trim();
-                        if (string.IsNullOrEmpty(pattern)) continue;
-                        
-                        if (_lastProcessName.Contains(pattern, StringComparison.OrdinalIgnoreCase) || 
-                            _lastWindowTitle.Contains(pattern, StringComparison.OrdinalIgnoreCase))
-                        {
-                            category = "Excluded";
-                            break;
-                        }
-                    }
-                }
-            }
-            catch { /* Ignore config errors, proceed to save */ }
-
             var log = new ActivityLog
             {
                 Timestamp = _lastStartTime,

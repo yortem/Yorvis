@@ -177,5 +177,58 @@ namespace Yorvis.Services
             }
             catch { return (0, 0); }
         }
+
+        public async Task<string> ExportData()
+        {
+            var logs = await _database.Table<ActivityLog>().ToListAsync();
+            var categories = await _database.Table<CategoryConfig>().ToListAsync();
+            var data = new { Logs = logs, Categories = categories };
+            return System.Text.Json.JsonSerializer.Serialize(data, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+
+        public async Task<int> ImportData(string json)
+        {
+            try
+            {
+                var data = System.Text.Json.JsonSerializer.Deserialize<DataImportModel>(json);
+                if (data == null) return 0;
+
+                int count = 0;
+                if (data.Categories != null)
+                {
+                    foreach (var cat in data.Categories)
+                    {
+                        if (cat.Name == "_Settings") continue; // Skip settings
+                        
+                        // Try to find by name first to avoid duplicates
+                        var existing = await _database.Table<CategoryConfig>().Where(x => x.Name == cat.Name).FirstOrDefaultAsync();
+                        if (existing == null)
+                        {
+                            cat.Id = 0; // Let SQLite generate new ID
+                            await _database.InsertAsync(cat);
+                            count++;
+                        }
+                    }
+                }
+
+                if (data.Logs != null)
+                {
+                    foreach (var log in data.Logs)
+                    {
+                        log.Id = 0; // New ID
+                        await _database.InsertAsync(log);
+                        count++;
+                    }
+                }
+                return count;
+            }
+            catch { return -1; }
+        }
+
+        private class DataImportModel
+        {
+            public List<ActivityLog>? Logs { get; set; }
+            public List<CategoryConfig>? Categories { get; set; }
+        }
     }
 }
