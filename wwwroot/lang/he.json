@@ -94,5 +94,21 @@
     "smart_wake": "זיהוי יקיצה חכם",
     "smart_wake_desc": "זיהוי יום חדש לאחר 5 שעות חוסר פעילות (מחליף את שעת תחילת היום הקבועה).",
     "excluded": "מוחרג",
-    "excluded_activity": "פעילות מוחרגת"
+    "excluded_activity": "פעילות מוחרגת",
+    "chat": "צ'אט",
+    "ai_start_chat": "שאל את Yorvis AI על העבודה שלך...",
+    "ai_input_placeholder": "שאל את Yorvis AI...",
+    "ai_config": "הגדרות AI",
+    "ai_provider": "ספק",
+    "ai_model": "מודל",
+    "ai_api_key": "מפתח API",
+    "ai_api_key_desc": "מפתח ה-API נשמר מקומית ולא משותף עם אף אחד.",
+    "projects": "פרויקטים",
+    "no_project": "אין פרויקט",
+    "no_projects": "אין פרויקטים עדיין. הוסף פרויקט ראשון כדי שה-AI יכיר את האתרים שלך.",
+    "copy": "העתק",
+    "voice_input": "הקלטה קולית",
+    "you": "אתה",
+    "ai_assistant": "AI",
+    "copied": "הועתק!"
 }

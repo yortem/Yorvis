@@ -17,6 +17,8 @@ namespace Yorvis.Services
             _database = new SQLiteAsyncConnection(DbPath);
             _database.CreateTableAsync<ActivityLog>().Wait();
             _database.CreateTableAsync<CategoryConfig>().Wait();
+            _database.CreateTableAsync<Project>().Wait();
+            _database.CreateTableAsync<ChatMessage>().Wait();
             SeedDefaults().Wait();
         }
 
@@ -70,11 +72,13 @@ namespace Yorvis.Services
                 BlacklistKeywords = "incognito|private browsing",
                 Theme = "light",
                 StartWithWindows = false,
-                SmartWakeDetection = false
+                SmartWakeDetection = false,
+                AiProvider = "deepseek",
+                AiModel = "deepseek-chat"
             };
         }
 
-        public async Task UpdateGlobalConfig(int interval, string lang, bool isRtl, int startOfDay, int startOfWeek, string blacklistKeywords, string theme, bool startWithWindows, bool smartWakeDetection = false)
+        public async Task UpdateGlobalConfig(int interval, string lang, bool isRtl, int startOfDay, int startOfWeek, string blacklistKeywords, string theme, bool startWithWindows, bool smartWakeDetection = false, string? aiApiKey = null, string? aiProvider = null, string? aiModel = null)
         {
             var config = await _database.Table<CategoryConfig>().Where(x => x.Name == "_Settings").FirstOrDefaultAsync();
             bool isNew = false;
@@ -93,6 +97,9 @@ namespace Yorvis.Services
             config.Theme = theme;
             config.StartWithWindows = startWithWindows;
             config.SmartWakeDetection = smartWakeDetection;
+            if (aiApiKey != null) config.AiApiKey = aiApiKey;
+            if (aiProvider != null) config.AiProvider = aiProvider;
+            if (aiModel != null) config.AiModel = aiModel;
 
             if (isNew)
                 await _database.InsertAsync(config);
@@ -226,6 +233,51 @@ namespace Yorvis.Services
                 return count;
             }
             catch { return -1; }
+        }
+
+        public Task<List<Project>> GetProjects()
+        {
+            return _database.Table<Project>().ToListAsync();
+        }
+
+        public Task<int> SaveProject(Project project)
+        {
+            if (project.Id != 0)
+                return _database.UpdateAsync(project);
+            return _database.InsertAsync(project);
+        }
+
+        public Task<int> DeleteProject(int id)
+        {
+            return _database.Table<Project>().Where(x => x.Id == id).DeleteAsync();
+        }
+
+        public Task<List<ChatMessage>> LoadChatHistory(string projectId, int beforeId = 0, int limit = 30)
+        {
+            if (beforeId > 0)
+                return _database.Table<ChatMessage>()
+                    .Where(x => x.ProjectId == projectId && x.Id < beforeId)
+                    .OrderByDescending(x => x.Id)
+                    .Take(limit)
+                    .ToListAsync();
+            else
+                return _database.Table<ChatMessage>()
+                    .Where(x => x.ProjectId == projectId)
+                    .OrderByDescending(x => x.Id)
+                    .Take(limit)
+                    .ToListAsync();
+        }
+
+        public async Task<List<ChatMessage>> SaveChatMessages(List<ChatMessage> messages)
+        {
+            var saved = new List<ChatMessage>();
+            foreach (var msg in messages)
+            {
+                msg.CreatedAt = DateTime.UtcNow.ToString("o");
+                await _database.InsertAsync(msg);
+                saved.Add(msg);
+            }
+            return saved;
         }
 
         private class DataImportModel

@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script id="tailwind-config">
           tailwind.config = {
             darkMode: "class",
@@ -156,6 +157,7 @@
             height: 100%;
         }
         .view.active { display: block; }
+        .view.active.ai-view { display: flex; flex-direction: column; }
 
         /* Scrollbar Styling */
         ::-webkit-scrollbar { width: 8px; }
@@ -412,7 +414,139 @@
         }
         .sub-view { display: none; }
         .sub-view.active { display: block; animation: fadeIn 0.2s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+
+        /* AI Chat Messages - RTL, full width, dividers */
+        .chat-message {
+            padding: 16px 12px;
+            border-bottom: 1px solid var(--outline-variant);
+            direction: rtl;
+            text-align: right;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+        .chat-message:last-child { border-bottom: none; }
+        .chat-message .msg-label {
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            opacity: 0.6;
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .chat-message.user-msg .msg-label,
+        .chat-message.user-msg .msg-content {
+            color: var(--primary);
+        }
+        .chat-message.user-msg .msg-label {
+            background: color-mix(in srgb, var(--primary) 12%, transparent);
+        }
+        .chat-message.ai-msg .msg-label {
+            color: var(--text-secondary);
+            background: var(--border-color);
+        }
+        .chat-message.ai-msg .msg-content {
+            color: var(--on-surface);
+        }
+        .chat-message .msg-content {
+            color: var(--on-surface);
+        }
+        .chat-message .msg-content h1,
+        .chat-message .msg-content h2,
+        .chat-message .msg-content h3,
+        .chat-message .msg-content h4 {
+            font-weight: 700;
+            margin: 16px 0 8px;
+            color: var(--on-surface);
+        }
+        .chat-message .msg-content h1 { font-size: 15px; }
+        .chat-message .msg-content h2 { font-size: 14px; }
+        .chat-message .msg-content h3 { font-size: 13px; }
+        .chat-message .msg-content p { margin: 8px 0; }
+        .chat-message .msg-content ul, .chat-message .msg-content ol {
+            padding-right: 20px;
+            margin: 8px 0;
+        }
+        .chat-message .msg-content li { margin: 4px 0; }
+        .chat-message .msg-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 11px;
+        }
+        .chat-message .msg-content th,
+        .chat-message .msg-content td {
+            border: 1px solid var(--outline-variant);
+            padding: 6px 10px;
+            text-align: right;
+        }
+        .chat-message .msg-content th {
+            background: var(--hover-bg);
+            font-weight: 700;
+        }
+        .chat-message .msg-content code {
+            background: var(--hover-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: monospace;
+        }
+        .chat-message .msg-content pre {
+            background: var(--hover-bg);
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 12px 0;
+            direction: ltr;
+            text-align: left;
+        }
+        .chat-message .msg-content pre code {
+            background: none;
+            padding: 0;
+        }
+        .chat-message .msg-content hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 16px 0;
+        }
+        .chat-message .msg-content strong { font-weight: 700; }
+        .chat-message .msg-content a { color: var(--primary); text-decoration: underline; }
+        .chat-message .ai-action-btn {
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            background: color-mix(in srgb, var(--primary) 10%, transparent);
+            border: 1.5px solid var(--primary);
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            line-height: 1.4;
+            white-space: nowrap;
+        }
+        .chat-message .ai-action-btn:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+        .chat-message .copy-btn {
+            margin-top: 8px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+        .chat-message .copy-btn:hover { color: var(--primary); }
 
         /* General Tailwind Overrides for Dark Mode */
         .dark .bg-white { background-color: var(--card-bg) !important; }
@@ -446,6 +580,7 @@
         <button onclick="showView('timeline')" class="nav-link" data-i18n="timeline">Timeline</button>
         <button onclick="showView('categories')" class="nav-link" data-i18n="categorize">Categorize</button>
         <button onclick="showView('settings')" class="nav-link" data-i18n="settings">Settings</button>
+        <button onclick="showView('ai')" class="nav-link" data-i18n="chat">Chat</button>
     </nav>
 
     <main>
@@ -630,6 +765,7 @@
             
             <div class="sub-nav no-drag">
                 <button onclick="showSettingsSubTab('general')" id="btn-sub-general" class="sub-nav-btn active">General</button>
+                <button onclick="showSettingsSubTab('ai')" id="btn-sub-ai" class="sub-nav-btn">AI</button>
                 <button onclick="showSettingsSubTab('database')" id="btn-sub-database" class="sub-nav-btn">Database</button>
             </div>
 
@@ -691,8 +827,43 @@
                             <p class="text-[9px] text-slate-400 italic" data-i18n="exclusion_desc">Activities matching these keywords (regex) will not be saved to the database. Split with |.</p>
                         </div>
                     </div>
-                    <div class="mt-8">
-                        <button onclick="saveSettings()" class="bg-primary text-white px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:translate-y-[-1px] transition-all no-drag" data-i18n="save_all_config">Save All Config</button>
+                </div>
+            </div>
+
+            <div id="settings-ai" class="sub-view">
+                <div class="flex flex-col gap-6">
+                    <div class="flex flex-col gap-3">
+                        <h4 class="text-[9px] font-black uppercase text-slate-400 tracking-widest px-1" data-i18n="ai_config">AI Configuration</h4>
+                        <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-4">
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs font-bold text-slate-500 w-28 shrink-0" data-i18n="ai_provider">Provider</span>
+                                <select id="aiProviderInput" class="w-40 p-1.5 text-xs border rounded bg-slate-50 outline-none">
+                                    <option value="deepseek">DeepSeek</option>
+                                    <option value="openai">OpenAI</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs font-bold text-slate-500 w-28 shrink-0" data-i18n="ai_model">Model</span>
+                                <input type="text" id="aiModelInput" value="deepseek-chat" class="w-40 p-1.5 text-xs border rounded bg-slate-50 outline-none">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 block mb-1" data-i18n="ai_api_key">API Key</label>
+                                <div class="flex gap-2">
+                                    <input type="password" id="aiApiKeyInput" class="flex-grow p-2 text-xs border rounded bg-slate-50 outline-none focus:border-primary font-mono" placeholder="sk-..." autocomplete="off">
+                                    <button onclick="this.previousElementSibling.type=this.previousElementSibling.type==='password'?'text':'password'" class="px-2 text-[10px] font-black uppercase text-slate-400 hover:text-primary transition-all">Show</button>
+                                </div>
+                                <p class="text-[9px] text-slate-400 italic mt-1" data-i18n="ai_api_key_desc">Your API key is stored locally and never shared.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        <h4 class="text-[9px] font-black uppercase text-slate-400 tracking-widest px-1" data-i18n="projects">Projects</h4>
+                        <div id="projectsList" class="flex flex-col gap-2">
+                            <div class="text-[10px] text-slate-400 italic px-1" data-i18n="no_projects">No projects yet. Add your first project to give AI context about your sites.</div>
+                        </div>
+                        <button onclick="addNewProject()" class="self-start bg-primary text-white px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest no-drag">+ Add Project</button>
                     </div>
                 </div>
             </div>
@@ -757,7 +928,14 @@
                         </div>
                     </div>
                 </div>
-            </div>            <!-- Settings Footer -->
+            </div>
+
+            <!-- Global Save Button (visible across all sub-tabs) -->
+            <div class="mt-8 mb-4">
+                <button onclick="saveSettings()" class="bg-primary text-white px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:translate-y-[-1px] transition-all no-drag" data-i18n="save_all_config">Save All Config</button>
+            </div>
+
+            <!-- Settings Footer -->
             <div class="mt-auto pt-12 pb-4 text-center">
                 <div class="flex flex-col items-center gap-2">
                     <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-300">
@@ -770,6 +948,39 @@
                         <span class="material-symbols-outlined text-[12px] opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1">arrow_forward</span>
                     </a>
                 </div>
+            </div>
+        </div>
+
+        <!-- AI Chat View -->
+        <div id="ai" class="view ai-view">
+            <div id="aiContextBar" class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm mb-4 flex-shrink-0">
+                <span class="material-symbols-outlined text-[18px] text-primary">neurology</span>
+                <div class="flex items-center gap-4 text-[10px] font-bold text-slate-500 flex-grow">
+                    <span id="aiContextProcess" class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">laptop</span> --</span>
+                    <span id="aiContextCategory" class="px-2 py-0.5 rounded-full text-white text-[9px] font-black uppercase">--</span>
+                    <select id="aiProjectSelect" onchange="switchAiProject(this.value)" class="text-[10px] font-bold bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-primary">
+                        <option value="general" data-i18n="no_project">No project</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="aiMessages" class="flex-grow overflow-y-auto mb-4 flex flex-col gap-3 min-h-0">
+                <div class="flex items-center justify-center h-full text-slate-300">
+                    <div class="text-center">
+                        <span class="material-symbols-outlined text-3xl opacity-20">chat</span>
+                        <div class="text-[10px] font-black uppercase tracking-widest mt-2" data-i18n="ai_start_chat">Ask Yorvis AI anything about your work...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-shrink-0 bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex items-end gap-3">
+                <textarea id="aiInput" rows="2" class="flex-grow p-2.5 text-xs border rounded-xl bg-slate-50 outline-none focus:border-primary resize-none" placeholder="Ask Yorvis AI..." data-i18n-placeholder="ai_input_placeholder" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage()}"></textarea>
+                <button id="aiMicBtn" onclick="startVoiceInput()" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-slate-400 hover:text-primary hover:border-primary transition-all">
+                    <span class="material-symbols-outlined text-[18px]">mic</span>
+                </button>
+                <button onclick="sendAiMessage()" class="h-9 px-4 flex items-center gap-1.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm hover:shadow-md transition-all">
+                    <span class="material-symbols-outlined text-[16px]">send</span>
+                </button>
             </div>
         </div>
     </main>
@@ -827,6 +1038,10 @@
         let expandedGroupIds = new Set();
         let blacklistKeywords = '';
         let smartWakeEnabled = false;
+        let aiHistory = {};
+        let currentProjectId = 'general';
+        let aiHasMore = {};
+        let aiLoadingHistory = false;
         const EXCLUDED_COLOR = '#6b7280';
         const EXCLUDED_LABEL = 'Excluded';
 
@@ -1014,6 +1229,285 @@
             document.getElementById('quickModal').style.display = 'none';
         }
 
+        function switchAiProject(projectId) {
+            currentProjectId = projectId;
+            aiHistory[projectId] = [];
+            aiHasMore[projectId] = true;
+            const container = document.getElementById('aiMessages');
+            container.innerHTML = '<div class="flex items-center justify-center h-full"><span class="material-symbols-outlined animate-spin">sync</span></div>';
+            window.external.sendMessage(JSON.stringify({
+                action: 'loadChatHistory',
+                projectId: projectId,
+                beforeId: 0,
+                limit: 30
+            }));
+        }
+
+        function renderAiHistory() {
+            const history = aiHistory[currentProjectId];
+            if (history && history.length > 0) {
+                const container = document.getElementById('aiMessages');
+                container.innerHTML = '';
+                history.forEach(msg => {
+                    container.appendChild(buildMessageEl(msg.role, msg.content));
+                });
+                container.scrollTop = container.scrollHeight;
+            } else if (!history) {
+                // Not yet loaded — request from backend
+                const container = document.getElementById('aiMessages');
+                container.innerHTML = '<div class="flex items-center justify-center h-full"><span class="material-symbols-outlined animate-spin">sync</span></div>';
+                window.external.sendMessage(JSON.stringify({
+                    action: 'loadChatHistory',
+                    projectId: currentProjectId,
+                    beforeId: 0,
+                    limit: 30
+                }));
+            }
+        }
+
+        function loadMoreChatHistory(scrollPreserve) {
+            if (aiLoadingHistory) return;
+            const container = document.getElementById('aiMessages');
+            const history = aiHistory[currentProjectId] || [];
+            const oldest = history.length > 0 ? history[0] : null;
+            const beforeId = oldest && oldest.id ? oldest.id : 0;
+            if (!aiHasMore[currentProjectId] && beforeId > 0) return;
+
+            aiLoadingHistory = true;
+            window.external.sendMessage(JSON.stringify({
+                action: 'loadChatHistory',
+                projectId: currentProjectId,
+                beforeId: beforeId,
+                limit: 30
+            }));
+            // Store scrollPreserve flag for the response handler
+            window._aiScrollPreserve = scrollPreserve;
+        }
+
+        function buildMessageEl(role, content) {
+            const isUser = role === 'user';
+            const div = document.createElement('div');
+            div.className = `chat-message ${isUser ? 'user-msg' : 'ai-msg'} animate-fadeIn`;
+            const label = isUser ? (translations['you'] || 'You') : (translations['ai_assistant'] || 'AI');
+
+            let rendered = isUser ? escapeHtml(content) : renderMarkdown(content);
+            let actionsHtml = '';
+
+            if (!isUser) {
+                // Parse action buttons from rendered DOM (survives any markdown wrapping)
+                const temp = document.createElement('div');
+                temp.innerHTML = rendered;
+                const ps = temp.querySelectorAll('p');
+                for (let i = ps.length - 1; i >= 0; i--) {
+                    const m = ps[i].textContent.match(/🔹?ACTIONS:\s*(\[[\s\S]*?\])\s*/);
+                    if (m) {
+                        try {
+                            const actions = JSON.parse(m[1]);
+                            ps[i].remove();
+                            rendered = temp.innerHTML;
+                            if (actions.length > 0) {
+                                actionsHtml = '<div class="flex flex-wrap gap-2 mt-3">' +
+                                    actions.map(a => `<button onclick="executeAiAction('${escapeHtml(a.label)}', '${escapeHtml(a.prompt)}')" class="ai-action-btn">${escapeHtml(a.label)}</button>`).join('') +
+                                    '</div>';
+                            }
+                        } catch(e) {}
+                        break;
+                    }
+                }
+            }
+
+            const copyBtn = !isUser ? `<button onclick="copyAiResponse(this)" class="copy-btn"><span class="material-symbols-outlined text-[12px]">content_copy</span> ${translations['copy'] || 'Copy'}</button>` : '';
+
+            div.innerHTML = `
+                <div class="msg-label">${label}</div>
+                <div class="msg-content">${rendered}</div>
+                ${actionsHtml}
+                ${copyBtn}
+            `;
+            return div;
+        }
+
+        function executeAiAction(label, prompt) {
+            const msg = `[${label}] ${prompt}`;
+            document.getElementById('aiInput').value = msg;
+            sendAiMessage();
+        }
+
+        function renderMarkdown(text) {
+            if (!text) return '';
+            try {
+                if (typeof marked !== 'undefined') {
+                    return marked.parse(text, { breaks: true, gfm: true });
+                }
+            } catch(e) {}
+            // Fallback: basic bold/italic
+            return escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
+        }
+
+        function sendAiMessage() {
+            const input = document.getElementById('aiInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+            input.value = '';
+            addAiMessage('user', msg);
+            if (!aiHistory[currentProjectId]) aiHistory[currentProjectId] = [];
+            aiHistory[currentProjectId].push({ role: 'user', content: msg });
+            window.external.sendMessage(JSON.stringify({ action: 'sendAiMessage', message: msg, projectId: currentProjectId }));
+        }
+
+        function persistChatMessages(messages) {
+            if (!messages || messages.length === 0) return;
+            window.external.sendMessage(JSON.stringify({ action: 'saveChatMessages', messages }));
+        }
+
+        function addAiMessage(role, content) {
+            const container = document.getElementById('aiMessages');
+            const placeholder = container.querySelector('.h-full');
+            if (placeholder) container.innerHTML = '';
+            container.appendChild(buildMessageEl(role, content));
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function updateLastAiMessage(content) {
+            const container = document.getElementById('aiMessages');
+            const lastMsgEl = container.querySelector('.chat-message:last-child');
+            if (lastMsgEl) {
+                // Rebuild the last message to handle actions properly
+                const newEl = buildMessageEl('assistant', content);
+                lastMsgEl.replaceWith(newEl);
+            } else {
+                addAiMessage('assistant', content);
+            }
+        }
+
+        function copyAiResponse(btn) {
+            const el = btn.closest('.chat-message')?.querySelector('.msg-content');
+            if (!el) return;
+            const html = el.innerHTML;
+            // Wrap in a full HTML document so WYSIWYG editors render headings/lists properly
+            const fullHtml = '<!DOCTYPE html><html><body>' + html + '</body></html>';
+            const blob = new Blob([fullHtml], { type: 'text/html' });
+            const textBlob = new Blob([el.innerText], { type: 'text/plain' });
+            navigator.clipboard.write([
+                new ClipboardItem({
+                    'text/html': blob,
+                    'text/plain': textBlob
+                })
+            ]).then(() => {
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<span class="material-symbols-outlined text-[12px]">check</span> ' + (translations['copied'] || 'Copied!');
+                setTimeout(() => btn.innerHTML = orig, 2000);
+            });
+        }
+
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        function startVoiceInput() {
+            // Browser Speech Recognition (Web Speech API)
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Voice input is not supported in this browser. Use text input instead.');
+                return;
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = currentLang === 'he' ? 'he-IL' : 'en-US';
+            recognition.interimResults = false;
+            recognition.continuous = false;
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('aiInput').value += transcript;
+            };
+            recognition.onerror = () => {
+                // Fallback silently
+            };
+            recognition.start();
+        }
+
+        // Lazy load chat history on scroll up
+        function initAiScrollListener() {
+            const container = document.getElementById('aiMessages');
+            container.addEventListener('scroll', function() {
+                if (this.scrollTop < 150 && !aiLoadingHistory && aiHasMore[currentProjectId]) {
+                    loadMoreChatHistory(true);
+                }
+            });
+        }
+
+        // Project Management
+        function loadProjects() {
+            window.external.sendMessage(JSON.stringify({ action: 'getProjects' }));
+        }
+
+        function addNewProject() {
+            saveProject({ Id: 0, Name: 'New Project', Url: '', SitemapUrl: '', Keywords: '', Notes: '' });
+        }
+
+        function saveProject(project) {
+            window.external.sendMessage(JSON.stringify({ action: 'saveProject', project }));
+        }
+
+        function deleteProject(id) {
+            if (confirm('Delete this project?')) {
+                window.external.sendMessage(JSON.stringify({ action: 'deleteProject', id }));
+            }
+        }
+
+        function renderProjectRow(project) {
+            const container = document.getElementById('projectsList');
+            const empty = container.querySelector('.italic');
+            if (empty) empty.remove();
+
+            // Remove existing row with same id if re-rendering
+            const existing = container.querySelector(`.project-row[data-id="${project.Id}"]`);
+            if (existing) existing.remove();
+
+            const row = document.createElement('div');
+            row.className = 'project-row bg-white p-4 rounded-xl border border-slate-100 shadow-sm';
+            row.dataset.id = project.Id;
+            row.id = `project-row-${project.Id}`;
+            row.innerHTML = `
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                        <input type="text" value="${escapeHtml(project.Name || '')}" onchange="updateProject(${project.Id}, 'Name', this.value)" class="font-bold text-xs bg-slate-50 border border-slate-200 rounded px-2 py-1 flex-grow outline-none focus:border-primary" placeholder="Project name">
+                        <input type="text" value="${escapeHtml(project.Url || '')}" onchange="updateProject(${project.Id}, 'Url', this.value)" class="text-[10px] font-mono bg-slate-50 border border-slate-200 rounded px-2 py-1 flex-grow outline-none focus:border-primary" placeholder="https://example.com">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="text" value="${escapeHtml(project.Keywords || '')}" onchange="updateProject(${project.Id}, 'Keywords', this.value)" id="project-keywords-${project.Id}" class="text-[10px] bg-slate-50 border border-slate-200 rounded px-2 py-1 flex-grow outline-none focus:border-primary" placeholder="SEO keywords">
+                        <button onclick="fillProjectDetails(${project.Id})" id="fill-btn-${project.Id}" class="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary hover:bg-primary hover:text-white px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 no-drag">
+                            <span class="material-symbols-outlined text-[12px]">auto_awesome</span>
+                            <span data-i18n="fill_details">Fill Details</span>
+                        </button>
+                        <button onclick="deleteProject(${project.Id})" class="text-slate-300 hover:text-error material-symbols-outlined text-[16px]">delete</button>
+                    </div>
+                    <textarea rows="1" onchange="updateProject(${project.Id}, 'Notes', this.value)" id="project-notes-${project.Id}" class="text-[10px] bg-slate-50 border border-slate-200 rounded px-2 py-1 w-full outline-none focus:border-primary resize-none" placeholder="Notes...">${escapeHtml(project.Notes || '')}</textarea>
+                </div>
+            `;
+            container.appendChild(row);
+        }
+
+        function fillProjectDetails(id) {
+            const row = document.getElementById(`project-row-${id}`);
+            const nameInput = row?.querySelector('input[placeholder="Project name"]');
+            const urlInput = row?.querySelector('input[placeholder*="example"]');
+            const name = nameInput?.value || '';
+            const url = urlInput?.value || '';
+            if (!url) { alert('Enter a URL first.'); return; }
+
+            const btn = document.getElementById(`fill-btn-${id}`);
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-symbols-outlined text-[12px]">hourglass_top</span> ...';
+
+            window.external.sendMessage(JSON.stringify({ action: 'fillProjectDetails', projectId: id, url, projectName: name }));
+        }
+
+        function updateProject(id, field, value) {
+            window.external.sendMessage(JSON.stringify({ action: 'saveProject', project: { Id: id, [field]: value } }));
+        }
+
         function submitQuickCategorize() {
             const catId = document.getElementById('quickCatSelect').value;
             const word = document.getElementById('quickKeyword').value.trim();
@@ -1152,6 +1646,13 @@
                 showSettingsSubTab('general');
             }
             
+            if (viewId === 'ai') {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+                window.external.sendMessage(JSON.stringify({ action: 'getAiContext' }));
+                renderAiHistory();
+            }
+            
             if (viewId === 'dashboard') {
                 if(!refreshInterval) refreshInterval = setInterval(refreshData, 15000);
                 refreshData();
@@ -1175,6 +1676,11 @@
             
             if(target) target.classList.add('active');
             if(btn) btn.classList.add('active');
+
+            if (tabId === 'ai') {
+                loadProjects();
+                window.external.sendMessage(JSON.stringify({ action: 'getAiContext' }));
+            }
         }
 
         function windowControl(command) { window.external.sendMessage(JSON.stringify({ action: 'windowControl', command })); }
@@ -1617,6 +2123,9 @@
             const blacklist = document.getElementById('blacklistInput').value;
             blacklistKeywords = blacklist;
             smartWakeEnabled = smartWake;
+            const aiApiKey = document.getElementById('aiApiKeyInput').value;
+            const aiProvider = document.getElementById('aiProviderInput').value;
+            const aiModel = document.getElementById('aiModelInput').value;
             window.external.sendMessage(JSON.stringify({ 
                 action: 'updateSettings', 
                 interval: 1, 
@@ -1627,7 +2136,10 @@
                 smartWakeDetection: smartWake,
                 startOfDay, 
                 startOfWeek,
-                blacklistKeywords: blacklist 
+                blacklistKeywords: blacklist,
+                aiApiKey,
+                aiProvider,
+                aiModel
             }));
             loadLanguage(language);
             setDirection(isRtl ? 'rtl' : 'ltr');
@@ -1726,6 +2238,11 @@
                     document.getElementById('blacklistInput').value = data.blacklistKeywords || '';
                     blacklistKeywords = data.blacklistKeywords || '';
                     
+                    // AI Settings
+                    document.getElementById('aiApiKeyInput').value = data.aiApiKey || '';
+                    document.getElementById('aiProviderInput').value = data.aiProvider || 'deepseek';
+                    document.getElementById('aiModelInput').value = data.aiModel || 'deepseek-chat';
+                    
                     // DB Info
                     if (data.dbSize !== undefined) {
                         document.getElementById('dbSizeText').innerText = (data.dbSize / (1024 * 1024)).toFixed(2) + ' MB';
@@ -1747,6 +2264,137 @@
                     document.getElementById('dbSizeText').innerText = (data.dbSize / (1024 * 1024)).toFixed(2) + ' MB';
                     document.getElementById('dbRecordsText').innerText = data.dbRecords.toLocaleString() + ' records';
                     refreshData();
+                }
+                // AI Messages
+                if (data.action === 'aiThinking') {
+                    addAiMessage('assistant', '...');
+                }
+                if (data.action === 'aiResponse') {
+                    updateLastAiMessage(data.content);
+                    if (!aiHistory[currentProjectId]) aiHistory[currentProjectId] = [];
+                    aiHistory[currentProjectId].push({ role: 'assistant', content: data.content });
+                    // Persist both user (second-to-last) and assistant (last) messages
+                    const h = aiHistory[currentProjectId];
+                    if (h.length >= 2) {
+                        const userMsg = h[h.length - 2];
+                        const aiMsg = h[h.length - 1];
+                        persistChatMessages([
+                            { projectId: currentProjectId, role: 'user', content: userMsg.content },
+                            { projectId: currentProjectId, role: 'assistant', content: aiMsg.content }
+                        ]);
+                    }
+                }
+                if (data.action === 'aiError') {
+                    updateLastAiMessage('[Error] ' + (data.error || 'Unknown error'));
+                }
+                if (data.action === 'chatHistory') {
+                    const container = document.getElementById('aiMessages');
+                    const scrollPreserve = window._aiScrollPreserve;
+                    window._aiScrollPreserve = false;
+
+                    const messages = data.messages || [];
+                    const projectId = data.projectId;
+                    aiHasMore[projectId] = data.hasMore;
+
+                    if (scrollPreserve) {
+                        // Lazy load: prepend older messages
+                        const prevScrollHeight = container.scrollHeight;
+                        const prevFirstMsg = container.querySelector('.chat-message:first-child');
+
+                        for (let i = messages.length - 1; i >= 0; i--) {
+                            const msg = messages[i];
+                            const el = buildMessageEl(msg.Role, msg.Content);
+                            container.insertBefore(el, container.firstChild);
+                        }
+
+                        // Build full history array
+                        const existingHistory = aiHistory[projectId] || [];
+                        const newHistory = messages.map(m => ({ id: m.Id, role: m.Role, content: m.Content }));
+                        aiHistory[projectId] = newHistory.concat(existingHistory);
+
+                        // Adjust scroll to keep position
+                        const newScrollHeight = container.scrollHeight;
+                        container.scrollTop = newScrollHeight - prevScrollHeight + container.scrollTop;
+                    } else {
+                        // Initial load: merge with any unsent in-memory messages
+                        const existing = aiHistory[projectId] || [];
+                        const unsent = existing.filter(m => !m.id);
+                        const loaded = messages.map(m => ({ id: m.Id, role: m.Role, content: m.Content }));
+                        aiHistory[projectId] = loaded.concat(unsent);
+
+                        container.innerHTML = '';
+                        if (aiHistory[projectId].length === 0) {
+                            container.innerHTML = `<div class="flex items-center justify-center h-full text-slate-300"><div class="text-center"><span class="material-symbols-outlined text-3xl opacity-20">chat</span><div class="text-[10px] font-black uppercase tracking-widest mt-2" data-i18n="ai_start_chat">Ask Yorvis AI anything about your work...</div></div></div>`;
+                        } else {
+                            aiHistory[projectId].forEach(msg => {
+                                container.appendChild(buildMessageEl(msg.role, msg.content));
+                            });
+                            container.scrollTop = container.scrollHeight;
+                        }
+                    }
+                    aiLoadingHistory = false;
+                }
+                if (data.action === 'chatMessagesSaved') {
+                    // Update in-memory history with DB ids
+                    const saved = data.messages || [];
+                    const h = aiHistory[currentProjectId] || [];
+                    let saveIdx = 0;
+                    for (let i = h.length - saved.length; i < h.length && saveIdx < saved.length; i++, saveIdx++) {
+                        if (h[i] && !h[i].id) h[i].id = saved[saveIdx].Id;
+                    }
+                }
+                if (data.action === 'aiContext') {
+                    document.getElementById('aiContextProcess').innerHTML = `<span class="material-symbols-outlined text-[14px]">laptop</span> ${escapeHtml(data.process || '--')}`;
+                    document.getElementById('aiContextCategory').innerText = data.category || '--';
+                    document.getElementById('aiContextCategory').style.backgroundColor = EXCLUDED_COLOR;
+                    const select = document.getElementById('aiProjectSelect');
+                    const currentVal = select.value;
+                    select.innerHTML = '<option value="general">' + (translations['no_project'] || 'No project') + '</option>';
+                    if (data.projects) {
+                        data.projects.forEach(p => {
+                            const opt = document.createElement('option');
+                            opt.value = p.Id;
+                            opt.innerText = p.Name || 'Unnamed';
+                            select.appendChild(opt);
+                        });
+                    }
+                    // Restore previous selection if still valid
+                    if ([...select.options].some(o => o.value === currentVal)) select.value = currentVal;
+                }
+                if (data.action === 'projectsData') {
+                    const container = document.getElementById('projectsList');
+                    container.innerHTML = '';
+                    if (data.projects && data.projects.length > 0) {
+                        data.projects.forEach(p => renderProjectRow(p));
+                    } else {
+                        container.innerHTML = '<div class="text-[10px] text-slate-400 italic px-1" data-i18n="no_projects">No projects yet. Add your first project to give AI context about your sites.</div>';
+                    }
+                }
+                if (data.action === 'fillProjectThinking') {
+                    const btn = document.getElementById(`fill-btn-${data.projectId}`);
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="material-symbols-outlined text-[12px]">hourglass_top</span> ...';
+                    }
+                }
+                if (data.action === 'fillProjectDone') {
+                    const btn = document.getElementById(`fill-btn-${data.projectId}`);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<span class="material-symbols-outlined text-[12px]">auto_awesome</span> ' + (translations['fill_details'] || 'Fill Details');
+                    }
+                    const kwInput = document.getElementById(`project-keywords-${data.projectId}`);
+                    const notesInput = document.getElementById(`project-notes-${data.projectId}`);
+                    if (data.keywords && kwInput) kwInput.value = data.keywords;
+                    if (data.description && notesInput) notesInput.value = data.description;
+                }
+                if (data.action === 'fillProjectError') {
+                    const btn = document.getElementById(`fill-btn-${data.projectId}`);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<span class="material-symbols-outlined text-[12px]">auto_awesome</span> ' + (translations['fill_details'] || 'Fill Details');
+                    }
+                    alert(data.error || 'Error filling project details.');
                 }
             } catch (e) {
                 console.error("Message Processing Error:", e);
@@ -2198,6 +2846,7 @@
         showView('dashboard');
         setTimelineMode('vertical');
         document.addEventListener('contextmenu', e => e.preventDefault());
+        initAiScrollListener();
     </script>
 </body>
 </html>

@@ -94,5 +94,21 @@
     "smart_wake": "Smart Wake Detection",
     "smart_wake_desc": "Detect new day after 5h idle gap (replaces fixed Start of Day).",
     "excluded": "Excluded",
-    "excluded_activity": "Excluded Activity"
+    "excluded_activity": "Excluded Activity",
+    "chat": "Chat",
+    "ai_start_chat": "Ask Yorvis AI anything about your work...",
+    "ai_input_placeholder": "Ask Yorvis AI...",
+    "ai_config": "AI Configuration",
+    "ai_provider": "Provider",
+    "ai_model": "Model",
+    "ai_api_key": "API Key",
+    "ai_api_key_desc": "Your API key is stored locally and never shared.",
+    "projects": "Projects",
+    "no_project": "No project",
+    "no_projects": "No projects yet. Add your first project to give AI context about your sites.",
+    "copy": "Copy",
+    "voice_input": "Voice input",
+    "ai_assistant": "AI",
+    "you": "You",
+    "copied": "Copied!"
 }
