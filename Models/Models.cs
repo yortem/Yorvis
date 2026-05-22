@@ -32,5 +32,6 @@ namespace Yorvis.Models
         public string? BlacklistKeywords { get; set; }
         public string? Theme { get; set; }
         public bool StartWithWindows { get; set; }
+        public bool SmartWakeDetection { get; set; }
     }
 }

@@ -678,6 +678,11 @@
                         <input type="checkbox" id="startupInput" class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary no-drag">
                         <span class="text-[10px] text-slate-400 ms-2">Launch Yorvis automatically when Windows starts.</span>
                     </div>
+                    <div class="setting-row">
+                        <span class="text-xs font-bold text-slate-500 w-32 shrink-0" data-i18n="smart_wake">Smart Wake</span>
+                        <input type="checkbox" id="smartWakeInput" class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary no-drag">
+                        <span class="text-[10px] text-slate-400 ms-2" data-i18n="smart_wake_desc">Detect new day after 5h idle gap (replaces fixed Start of Day).</span>
+                    </div>
                     <div class="mt-8 pt-6 border-t border-slate-100">
                         <h3 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest" data-i18n="privacy_exclusions">Privacy & Exclusions</h3>
                         <div class="flex flex-col gap-2">
@@ -821,6 +826,9 @@
         let contextData = { process: '', title: '' };
         let expandedGroupIds = new Set();
         let blacklistKeywords = '';
+        let smartWakeEnabled = false;
+        const EXCLUDED_COLOR = '#6b7280';
+        const EXCLUDED_LABEL = 'Excluded';
 
         async function loadLanguage(lang) {
             // ... (keep existing)
@@ -965,6 +973,24 @@
             if (isEmpty) return "Background / System";
             
             return "Uncategorized";
+        }
+
+        function detectWakeTime(logs, referenceTime, thresholdHours) {
+            thresholdHours = thresholdHours || 5;
+            if (!logs || logs.length === 0) return null;
+            const sorted = [...logs].sort((a, b) => parseDate(b.Timestamp) - parseDate(a.Timestamp));
+            const thresholdMs = thresholdHours * 3600000;
+            let prevEnd = referenceTime;
+            for (const log of sorted) {
+                const logStart = parseDate(log.Timestamp);
+                const logEnd = logStart + (log.DurationSeconds || 0) * 1000;
+                const gap = prevEnd - logEnd;
+                if (gap > thresholdMs) {
+                    return logEnd;
+                }
+                prevEnd = logStart;
+            }
+            return null;
         }
 
         function parseDate(d) {
@@ -1299,6 +1325,7 @@
             if (timelineStackedBarChart) {
                 timelineStackedBarChart.data.labels = labels;
                 timelineStackedBarChart.data.datasets = datasets;
+                timelineStackedBarChart.options.rtl = document.documentElement.dir === 'rtl';
                 timelineStackedBarChart.update();
             } else {
                 timelineStackedBarChart = new Chart(ctx, {
@@ -1307,6 +1334,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        rtl: document.documentElement.dir === 'rtl',
                         plugins: {
                             legend: { display: false },
                             tooltip: {
@@ -1341,7 +1369,15 @@
                 log.Category = getCatForLog(log.ProcessName, log.WindowTitle, categories); 
             });
 
-            const logs = originalLogs.filter(l => l.Category !== "Excluded");
+            // Smart Wake Detection (day range in map/stream)
+            let effectiveStart = filterStart.getTime();
+            if (smartWakeEnabled && currentFilter === 'day' && currentTimelineTab !== 'graph') {
+                const wakeTime = detectWakeTime(originalLogs, filterEnd.getTime());
+                if (wakeTime && wakeTime > filterStart.getTime()) {
+                    effectiveStart = wakeTime;
+                }
+            }
+            const logs = originalLogs.filter(l => parseDate(l.Timestamp) >= effectiveStart);
 
             const searchQuery = document.getElementById('timelineSearch')?.value.toLowerCase() || "";
             let filteredLogs = logs || [];
@@ -1369,6 +1405,8 @@
 
             const catMap = {};
             const catStats = { "Idle / Away": 0 };
+            catMap[EXCLUDED_LABEL] = EXCLUDED_COLOR;
+            catStats[EXCLUDED_LABEL] = 0;
             categories.forEach(c => {
                 catMap[c.Name] = c.Color;
                 catStats[c.Name] = 0;
@@ -1573,10 +1611,12 @@
             const isRtl = document.getElementById('dirInput').value === 'rtl';
             const theme = document.getElementById('themeInput').value;
             const startWithWindows = document.getElementById('startupInput').checked;
+            const smartWake = document.getElementById('smartWakeInput').checked;
             const startOfDay = parseInt(document.getElementById('startOfDayInput').value);
             const startOfWeek = parseInt(document.getElementById('startOfWeekInput').value);
             const blacklist = document.getElementById('blacklistInput').value;
             blacklistKeywords = blacklist;
+            smartWakeEnabled = smartWake;
             window.external.sendMessage(JSON.stringify({ 
                 action: 'updateSettings', 
                 interval: 1, 
@@ -1584,6 +1624,7 @@
                 isRtl, 
                 theme,
                 startWithWindows,
+                smartWakeDetection: smartWake,
                 startOfDay, 
                 startOfWeek,
                 blacklistKeywords: blacklist 
@@ -1678,6 +1719,8 @@
                     document.getElementById('dirInput').value = data.isRtl ? 'rtl' : 'ltr';
                     document.getElementById('themeInput').value = data.theme || 'light';
                     document.getElementById('startupInput').checked = !!data.startWithWindows;
+                    document.getElementById('smartWakeInput').checked = !!data.smartWakeDetection;
+                    smartWakeEnabled = !!data.smartWakeDetection;
                     document.getElementById('startOfDayInput').value = data.startOfDay;
                     document.getElementById('startOfWeekInput').value = data.startOfWeek;
                     document.getElementById('blacklistInput').value = data.blacklistKeywords || '';
@@ -1834,8 +1877,13 @@
             let displayTitle = "";
             let timeStr = "";
             if (isGroup) {
-                const uniqueTitles = [...new Set(item.logs.map(l => (l.WindowTitle || l.ProcessName).split(' ')[0].replace(/[^\w\u0590-\u05FF]/g, '')))].filter(t => t && t.length > 1);
-                displayTitle = uniqueTitles.slice(0, 3).join(', ') || item.category;
+                const isExcludedGroup = item.category === EXCLUDED_LABEL;
+                if (isExcludedGroup) {
+                    displayTitle = translations['excluded_activity'] || 'Excluded Activity';
+                } else {
+                    const uniqueTitles = [...new Set(item.logs.map(l => (l.WindowTitle || l.ProcessName).split(' ')[0].replace(/[^\w\u0590-\u05FF]/g, '')))].filter(t => t && t.length > 1);
+                    displayTitle = uniqueTitles.slice(0, 3).join(', ') || item.category;
+                }
                 
                 const startTs = parseDate(item.startTime);
                 const startStr = new Date(startTs).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
@@ -1886,25 +1934,28 @@
         function renderStandaloneRow(log, color, isStandalone, mode) {
             const logTime = parseDate(log.Timestamp);
             const timeStr = new Date(logTime).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
-            const safeTitle = (log.WindowTitle || "").replace(/'/g, "\\'");
-            const safeProcess = (log.ProcessName || "").replace(/'/g, "\\'");
+            const isExcluded = log.Category === EXCLUDED_LABEL;
+            const displayProcess = isExcluded ? translations['excluded'] || EXCLUDED_LABEL : log.ProcessName;
+            const displayTitle = isExcluded ? '' : (log.WindowTitle || '');
+            const safeTitle = (displayTitle || "").replace(/'/g, "\\'");
+            const safeProcess = (displayProcess || "").replace(/'/g, "\\'");
             
             const itemClass = `py-2.5 flex flex-col gap-1 relative group overflow-hidden cursor-context-menu hover:bg-hover transition-all rounded-lg ${isStandalone ? '' : 'opacity-70 hover:opacity-100 border-b border-slate-50/50'}`;
 
             return `
-                <div class="${itemClass}" oncontextmenu="showContextMenu(event, '${safeProcess}', '${safeTitle}')">
+                <div class="${itemClass}" ${isExcluded ? '' : `oncontextmenu="showContextMenu(event, '${safeProcess}', '${safeTitle}')"`}>
                     <div class="flex items-center gap-3">
                         ${isStandalone ? `<div class="w-1 h-6 rounded-full shrink-0" style="background-color: ${color}"></div>` : ''}
                         <div class="flex-grow min-w-0">
                             <div class="flex justify-between items-center mb-0.5">
                                 <div class="flex items-center gap-2 truncate">
-                                    <span class="text-[11px] font-black text-slate-800">${log.ProcessName}</span>
+                                    <span class="text-[11px] font-black ${isExcluded ? 'text-slate-400 italic' : 'text-slate-800'}">${displayProcess}</span>
                                     ${isStandalone ? `<span class="text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase text-white shadow-sm" style="background-color: ${color}">${log.Category}</span>` : ''}
                                 </div>
                                 <span class="text-[9px] font-black text-slate-400 font-mono">${timeStr} • ${formatDuration(log.DurationSeconds)}</span>
                             </div>
                             <div class="flex justify-between items-center">
-                                <span class="text-[9px] text-slate-400 truncate block italic leading-tight">${log.WindowTitle || ''}</span>
+                                <span class="text-[9px] text-slate-400 truncate block italic leading-tight">${displayTitle || ''}</span>
                             </div>
                         </div>
                     </div>
@@ -1941,11 +1992,20 @@
                     log.Category = getCatForLog(log.ProcessName, log.WindowTitle, categories); 
                 });
 
-                // Filter out blacklisted items for the dashboard
-                const logs = originalLogs.filter(l => l.Category !== "Excluded");
+                // Smart Wake Detection: narrow to effective day start
+                let effectiveStart = filterStart.getTime();
+                if (smartWakeEnabled && currentFilter === 'day') {
+                    const wakeTime = detectWakeTime(originalLogs, filterEnd.getTime());
+                    if (wakeTime && wakeTime > filterStart.getTime()) {
+                        effectiveStart = wakeTime;
+                    }
+                }
+                const logs = originalLogs.filter(l => parseDate(l.Timestamp) >= effectiveStart);
 
                 const catMap = {};
                 const catProdMap = {};
+                catMap[EXCLUDED_LABEL] = EXCLUDED_COLOR;
+                catProdMap[EXCLUDED_LABEL] = "Neutral";
                 categories.forEach(c => {
                     catMap[c.Name] = c.Color;
                     catProdMap[c.Name] = c.ProductivityType || "Neutral";
@@ -2032,8 +2092,10 @@
                 pieChart.data.labels = labels;
                 pieChart.data.datasets[0].data = data;
                 pieChart.data.datasets[0].backgroundColor = colors;
+                pieChart.options.rtl = document.documentElement.dir === 'rtl';
                 pieChart.update();
             } else {
+                const isRTL = document.documentElement.dir === 'rtl';
                 pieChart = new Chart(ctx, {
                     type: 'pie',
                     data: { 
@@ -2050,6 +2112,7 @@
                         responsive: true, 
                         maintainAspectRatio: true,
                         animation: { duration: 750, easing: 'easeInOutQuart' }, 
+                        rtl: isRTL,
                         plugins: { 
                             legend: { display: false },
                             tooltip: {

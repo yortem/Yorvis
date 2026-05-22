@@ -178,6 +178,7 @@ namespace Yorvis
                         startOfDay = config.StartOfDayHour,
                         startOfWeek = config.StartOfWeekDay,
                         blacklistKeywords = config.BlacklistKeywords,
+                        smartWakeDetection = config.SmartWakeDetection,
                         dbSize = dbInfo.SizeBytes,
                         dbRecords = dbInfo.RecordCount
                     };
@@ -194,8 +195,9 @@ namespace Yorvis
                     int startOfDay = doc.RootElement.GetProperty("startOfDay").GetInt32();
                     int startOfWeek = doc.RootElement.GetProperty("startOfWeek").GetInt32();
                     string blacklist = doc.RootElement.TryGetProperty("blacklistKeywords", out var bl) ? bl.GetString() ?? "" : "";
+                    bool smartWake = doc.RootElement.TryGetProperty("smartWakeDetection", out var sw) && sw.GetBoolean();
                     
-                    await db.UpdateGlobalConfig(interval, lang, isRtl, startOfDay, startOfWeek, blacklist, theme, startWithWindows);
+                    await db.UpdateGlobalConfig(interval, lang, isRtl, startOfDay, startOfWeek, blacklist, theme, startWithWindows, smartWake);
                     SetStartup(startWithWindows);
                 }
                 else if (action == "saveCategory")

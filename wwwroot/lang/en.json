@@ -90,5 +90,9 @@
     "export_desc": "Export all categories and activity logs to a JSON file.",
     "import_desc": "Import data from a Yorvis JSON export file. Existing categories will be merged.",
     "export_data": "Export Data",
-    "import_data": "Import Data"
+    "import_data": "Import Data",
+    "smart_wake": "Smart Wake Detection",
+    "smart_wake_desc": "Detect new day after 5h idle gap (replaces fixed Start of Day).",
+    "excluded": "Excluded",
+    "excluded_activity": "Excluded Activity"
 }

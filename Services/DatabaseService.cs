@@ -33,7 +33,8 @@ namespace Yorvis.Services
                     IsRtl = false,
                     StartOfDayHour = 4,
                     StartOfWeekDay = 1, // Monday
-                    BlacklistKeywords = "incognito|private browsing"
+                    BlacklistKeywords = "incognito|private browsing",
+                    SmartWakeDetection = false
                 });
 
                 // Top level
@@ -68,11 +69,12 @@ namespace Yorvis.Services
                 StartOfWeekDay = 1,
                 BlacklistKeywords = "incognito|private browsing",
                 Theme = "light",
-                StartWithWindows = false
+                StartWithWindows = false,
+                SmartWakeDetection = false
             };
         }
 
-        public async Task UpdateGlobalConfig(int interval, string lang, bool isRtl, int startOfDay, int startOfWeek, string blacklistKeywords, string theme, bool startWithWindows)
+        public async Task UpdateGlobalConfig(int interval, string lang, bool isRtl, int startOfDay, int startOfWeek, string blacklistKeywords, string theme, bool startWithWindows, bool smartWakeDetection = false)
         {
             var config = await _database.Table<CategoryConfig>().Where(x => x.Name == "_Settings").FirstOrDefaultAsync();
             bool isNew = false;
@@ -90,6 +92,7 @@ namespace Yorvis.Services
             config.BlacklistKeywords = blacklistKeywords;
             config.Theme = theme;
             config.StartWithWindows = startWithWindows;
+            config.SmartWakeDetection = smartWakeDetection;
 
             if (isNew)
                 await _database.InsertAsync(config);
