@@ -110,5 +110,21 @@
     "voice_input": "Voice input",
     "ai_assistant": "AI",
     "you": "You",
-    "copied": "Copied!"
+    "copied": "Copied!",
+    "tpl_article": "Article",
+    "tpl_ideas": "Ideas",
+    "tpl_product": "Product",
+    "tpl_plan": "Plan",
+    "tpl_meta": "Meta",
+    "tpl_h2": "H2",
+    "tpl_alt": "Alt",
+    "tpl_translate": "HTML",
+    "tpl_article_full": "Write a full article with H1 title, at least 3 H2 headings and a list about: ",
+    "tpl_ideas_full": "Suggest 5 article ideas about: ",
+    "tpl_product_full": "Write a compelling product description with H1 title, benefits list and specs for: ",
+    "tpl_plan_full": "Give me a detailed work plan for the next hour with 3-4 focused SEO tasks: ",
+    "tpl_meta_full": "Write 3 Meta Description versions for: ",
+    "tpl_h2_full": "Suggest 5 H2 headings for: ",
+    "tpl_alt_full": "Write optimal Alt Text for image: ",
+    "tpl_translate_full": "Translate to English while preserving HTML structure:\n\n"
 }

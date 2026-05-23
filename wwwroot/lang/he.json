@@ -110,5 +110,21 @@
     "voice_input": "הקלטה קולית",
     "you": "אתה",
     "ai_assistant": "AI",
-    "copied": "הועתק!"
+    "copied": "הועתק!",
+    "tpl_article": "מאמר",
+    "tpl_ideas": "רעיונות",
+    "tpl_product": "מוצר",
+    "tpl_plan": "משימות",
+    "tpl_meta": "Meta",
+    "tpl_h2": "H2",
+    "tpl_alt": "Alt",
+    "tpl_translate": "HTML",
+    "tpl_article_full": "כתוב מאמר מלא עם כותרת H1, לפחות 3 כותרות H2 ורשימה, בנושא: ",
+    "tpl_ideas_full": "הצע 5 רעיונות למאמרים בנושא: ",
+    "tpl_product_full": "כתוב תיאור מוצר משכנע עם כותרת H1, רשימת יתרונות ומפרט טכני למוצר: ",
+    "tpl_plan_full": "תן לי תכנית עבודה מפורטת לשעה הקרובה, עם 3-4 משימות ממוקדות SEO: ",
+    "tpl_meta_full": "כתוב 3 גרסאות Meta Description לנושא: ",
+    "tpl_h2_full": "הצע 5 כותרות H2 למאמר על: ",
+    "tpl_alt_full": "כתוב Alt Text אופטימלי לתמונה: ",
+    "tpl_translate_full": "תרגם את התוכן הבא לאנגלית תוך שמירה על מבנה HTML:\n\n"
 }
