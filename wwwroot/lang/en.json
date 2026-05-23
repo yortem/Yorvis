@@ -108,6 +108,8 @@
     "no_projects": "No projects yet. Add your first project to give AI context about your sites.",
     "copy": "Copy",
     "voice_input": "Voice input",
+    "voice_listening": "Listening...",
+    "voice_error": "Mic error",
     "ai_assistant": "AI",
     "you": "You",
     "copied": "Copied!",

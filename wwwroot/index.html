@@ -572,6 +572,16 @@
         }
 
         .dark .chat-message .bubble { background: var(--card-bg); border-color: var(--border-color); }
+        #aiMicBtn.recording {
+            color: #fff !important;
+            background: var(--primary) !important;
+            border-color: var(--primary) !important;
+            animation: ai-pulse 1.2s ease-in-out infinite;
+        }
+        @keyframes ai-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 40%, transparent); }
+            50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 0%, transparent); }
+        }
         /* General Tailwind Overrides for Dark Mode */
         .dark .bg-white { background-color: var(--card-bg) !important; }
         .dark .bg-slate-50 { background-color: var(--background) !important; }
@@ -1013,6 +1023,7 @@
                     <button id="aiMicBtn" onclick="startVoiceInput()" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-slate-400 hover:text-primary hover:border-primary transition-all">
                         <span class="material-symbols-outlined text-[18px]">mic</span>
                     </button>
+                    <span id="aiVoiceStatus" class="text-[9px] font-bold text-primary hidden whitespace-nowrap"></span>
                     <button onclick="sendAiMessage()" class="h-9 px-4 flex items-center gap-1.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm hover:shadow-md transition-all">
                         <span class="material-symbols-outlined text-[16px]">send</span>
                     </button>
@@ -1466,6 +1477,7 @@
 
         function startVoiceInput() {
             const btn = document.getElementById('aiMicBtn');
+            const status = document.getElementById('aiVoiceStatus');
             const isSupported = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
 
             if (!isSupported) {
@@ -1478,34 +1490,47 @@
                 return;
             }
 
-            if (window._aiListening) return;
+            if (window._aiListening) { window._aiListening = false; window._aiRecognition?.stop(); return; }
+
             window._aiListening = true;
-            btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">mic</span>';
-            btn.style.color = 'var(--primary)';
-            btn.style.background = 'color-mix(in srgb, var(--primary) 15%, transparent)';
+            btn.classList.add('recording');
+
+            if (status) {
+                status.textContent = translations['voice_listening'] || 'מקשיב...';
+                status.style.display = 'inline';
+            }
 
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
+            window._aiRecognition = recognition;
             recognition.lang = currentLang === 'he' ? 'he-IL' : 'en-US';
-            recognition.interimResults = false;
-            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.continuous = true;
             recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
+                let final = '';
+                let interim = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        final += event.results[i][0].transcript;
+                    } else {
+                        interim += event.results[i][0].transcript;
+                    }
+                }
                 const input = document.getElementById('aiInput');
-                input.value += transcript;
-                input.focus();
+                if (final) input.value += final + ' ';
+                if (status && interim) status.textContent = interim;
             };
-            recognition.onerror = () => {
+            recognition.onerror = (e) => {
+                console.error('SpeechRecognition error:', e.error, e.message);
                 window._aiListening = false;
-                btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">mic</span>';
-                btn.style.color = '';
-                btn.style.background = '';
+                btn.classList.remove('recording');
+                if (status) status.textContent = translations['voice_error'] || 'שגיאה';
+                setTimeout(() => { if (status) status.style.display = 'none'; }, 2000);
             };
             recognition.onend = () => {
                 window._aiListening = false;
-                btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">mic</span>';
-                btn.style.color = '';
-                btn.style.background = '';
+                btn.classList.remove('recording');
+                setTimeout(() => { if (status) status.style.display = 'none'; }, 500);
             };
             recognition.start();
         }
