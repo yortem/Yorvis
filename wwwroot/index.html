@@ -572,6 +572,8 @@
         }
 
         .dark .chat-message .bubble { background: var(--card-bg); border-color: var(--border-color); }
+        [dir="rtl"] select { background-position: left 0.5rem center; padding-right: 0.5rem; padding-left: 1.5rem; }
+        [dir="rtl"] .ai-send-icon { transform: scaleX(-1); }
         #aiMicBtn.recording {
             color: #fff !important;
             background: var(--primary) !important;
@@ -798,9 +800,9 @@
             <h2 class="text-sm font-black text-slate-700 mb-6 uppercase tracking-tight" data-i18n="system_settings">System Settings</h2>
             
             <div class="sub-nav no-drag">
-                <button onclick="showSettingsSubTab('general')" id="btn-sub-general" class="sub-nav-btn active">General</button>
-                <button onclick="showSettingsSubTab('ai')" id="btn-sub-ai" class="sub-nav-btn">AI</button>
-                <button onclick="showSettingsSubTab('database')" id="btn-sub-database" class="sub-nav-btn">Database</button>
+                <button onclick="showSettingsSubTab('general')" id="btn-sub-general" class="sub-nav-btn active" data-i18n="nav_general">General</button>
+                <button onclick="showSettingsSubTab('ai')" id="btn-sub-ai" class="sub-nav-btn" data-i18n="nav_ai">AI</button>
+                <button onclick="showSettingsSubTab('database')" id="btn-sub-database" class="sub-nav-btn" data-i18n="nav_database">Database</button>
             </div>
 
             <div id="settings-general" class="sub-view active">
@@ -1025,7 +1027,7 @@
                     </button>
                     <span id="aiVoiceStatus" class="text-[9px] font-bold text-primary hidden whitespace-nowrap"></span>
                     <button onclick="sendAiMessage()" class="h-9 px-4 flex items-center gap-1.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm hover:shadow-md transition-all">
-                        <span class="material-symbols-outlined text-[16px]">send</span>
+                        <span class="material-symbols-outlined text-[16px] ai-send-icon">send</span>
                     </button>
                 </div>
             </div>
@@ -1093,11 +1095,11 @@
         const EXCLUDED_LABEL = 'Excluded';
 
         async function loadLanguage(lang) {
-            // ... (keep existing)
             try {
                 const response = await fetch(`./lang/${lang}.json`);
                 translations = await response.json();
                 currentLang = lang;
+                document.documentElement.lang = lang;
                 applyTranslations();
             } catch (e) { console.error("Failed to load language", e); }
         }
