@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@300..800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script id="tailwind-config">
@@ -50,7 +51,7 @@
         }
 
         :root[lang="he"] {
-            --font-main: 'Open Sans';
+            --font-main: 'Noto Sans Hebrew', 'Open Sans';
         }
 
         .dark {
@@ -433,15 +434,17 @@
             padding: 14px 16px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.04);
             max-width: 92%;
-            align-self: flex-end;
+            align-self: flex-start;
         }
         .chat-message.user-msg .bubble {
-            border-bottom-left-radius: 4px;
             border-color: color-mix(in srgb, var(--primary) 25%, transparent);
         }
-        .chat-message.ai-msg .bubble {
-            align-self: flex-start;
-            border-bottom-right-radius: 4px;
+        .chat-message .bubble {
+            border-bottom-right-radius: 4px; /* RTL: flat corner at the right (start) edge */
+        }
+        [dir="ltr"] .chat-message .bubble {
+            border-bottom-right-radius: 14px;
+            border-bottom-left-radius: 4px; /* LTR: flat corner at the left (start) edge */
         }
         .chat-message .msg-label {
             font-size: 9px;
